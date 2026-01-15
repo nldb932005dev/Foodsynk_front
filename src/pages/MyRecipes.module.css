@@ -1,0 +1,70 @@
+.my-recipes {
+  padding: 24px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.my-recipes__title {
+  font-size: 28px;
+  margin-bottom: 16px;
+}
+
+.my-recipes__info {
+  margin: 12px 0;
+  opacity: 0.8;
+}
+
+.my-recipes__error {
+  margin: 12px 0;
+  color: #c62828;
+  font-weight: 600;
+}
+
+.my-recipes__list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.my-recipes__item {
+  margin: 0;
+}
+
+.my-recipes__card {
+  display: flex;
+  gap: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  padding: 12px;
+  background: #fff;
+}
+
+.my-recipes__img {
+  width: 92px;
+  height: 92px;
+  object-fit: cover;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.my-recipes__content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.my-recipes__recipe-title {
+  font-size: 18px;
+  margin: 0;
+}
+
+.my-recipes__steps {
+  margin: 0;
+  opacity: 0.85;
+  line-height: 1.35;
+  font-size: 14px;
+}
