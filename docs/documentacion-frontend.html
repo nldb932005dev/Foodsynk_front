@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FoodSynk - Documentacion del Frontend</title>
+  <style>
+    :root {
+      --navy: #1B2A4A;
+      --coral: #E84C3D;
+      --green: #2D6A4F;
+      --green-light: #A7D7C5;
+      --cream: #F8F6F3;
+      --orange: #E8713A;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--cream);
+      color: #333;
+      line-height: 1.7;
+      padding: 0;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--navy), #243756);
+      color: white;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    header h1 span { color: var(--coral); }
+    header p { color: rgba(255,255,255,0.7); font-size: 1.1rem; }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    nav.toc {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    nav.toc h2 { color: var(--navy); margin-bottom: 1rem; font-size: 1.3rem; }
+
+    nav.toc ol { padding-left: 1.5rem; }
+    nav.toc li { margin-bottom: 0.4rem; }
+    nav.toc a { color: var(--green); text-decoration: none; }
+    nav.toc a:hover { text-decoration: underline; }
+
+    section {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    h2 {
+      color: var(--navy);
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 3px solid var(--green-light);
+    }
+
+    h3 {
+      color: var(--green);
+      font-size: 1.15rem;
+      margin: 1.5rem 0 0.5rem;
+    }
+
+    h4 {
+      color: var(--navy);
+      font-size: 1rem;
+      margin: 1rem 0 0.5rem;
+    }
+
+    p { margin-bottom: 0.8rem; }
+
+    code {
+      background: #f0ede8;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      font-family: 'Consolas', 'Fira Code', monospace;
+      color: var(--coral);
+    }
+
+    pre {
+      background: var(--navy);
+      color: #e0e0e0;
+      padding: 1.2rem;
+      border-radius: 12px;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+    }
+
+    .highlight { color: var(--coral); }
+    .highlight-green { color: var(--green-light); }
+    .highlight-orange { color: var(--orange); }
+
+    .file-path {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--green), var(--navy));
+      color: white;
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: monospace;
+      margin-bottom: 0.5rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 6px;
+      margin-bottom: 4px;
+    }
+
+    .badge-component { background: #e0f2fe; color: #0369a1; }
+    .badge-page { background: #fce7f3; color: #be185d; }
+    .badge-new { background: #dcfce7; color: #166534; }
+    .badge-modified { background: #fef9c3; color: #854d0e; }
+    .badge-auth { background: #f3e8ff; color: #7c3aed; }
+    .badge-security { background: #fee2e2; color: #991b1b; }
+
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.3rem; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    th {
+      background: var(--navy);
+      color: white;
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) { background: #f9fafb; }
+
+    .concept-box {
+      background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+      border-left: 4px solid var(--green);
+      padding: 1rem 1.2rem;
+      border-radius: 0 12px 12px 0;
+      margin: 1rem 0;
+    }
+
+    .warning-box {
+      background: linear-gradient(135deg, #fef2f2, #fee2e2);
+      border-left: 4px solid var(--coral);
+      padding: 1rem 1.2rem;
+      border-radius: 0 12px 12px 0;
+      margin: 1rem 0;
+    }
+
+    .info-box {
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      border-left: 4px solid #3b82f6;
+      padding: 1rem 1.2rem;
+      border-radius: 0 12px 12px 0;
+      margin: 1rem 0;
+    }
+
+    .tree {
+      font-family: monospace;
+      background: #f8f8f5;
+      padding: 1rem;
+      border-radius: 12px;
+      line-height: 1.6;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: #888;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Food<span>Synk</span> - Frontend</h1>
+  <p>Documentacion completa del frontend React + Tailwind CSS</p>
+</header>
+
+<div class="container">
+
+  <!-- INDICE -->
+  <nav class="toc">
+    <h2>Indice de contenidos</h2>
+    <ol>
+      <li><a href="#estructura">Estructura del proyecto</a></li>
+      <li><a href="#conceptos-react">Conceptos de React utilizados</a></li>
+      <li><a href="#conceptos-tailwind">Conceptos de Tailwind CSS utilizados</a></li>
+      <li><a href="#auth">Sistema de autenticacion</a></li>
+      <li><a href="#routing">Enrutamiento (Routing)</a></li>
+      <li><a href="#componentes">Componentes reutilizables</a></li>
+      <li><a href="#paginas">Paginas</a></li>
+      <li><a href="#layouts">Layouts</a></li>
+      <li><a href="#api">Comunicacion con la API</a></li>
+      <li><a href="#seguridad">Analisis de seguridad (OWASP Top 10)</a></li>
+      <li><a href="#resumen-cambios">Resumen de todos los cambios realizados</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1. ESTRUCTURA -->
+  <section id="estructura">
+    <h2>1. Estructura del proyecto</h2>
+    <p>El proyecto sigue una organizacion por funcionalidad, separando paginas, componentes reutilizables, autenticacion y comunicacion con la API:</p>
+
+    <div class="tree">
+src/<br/>
+├── api/<br/>
+│   └── <strong>axios.js</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ← Configuracion de Axios (HTTP client)<br/>
+├── auth/<br/>
+│   ├── <strong>AuthContext.jsx</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ← Contexto de React para autenticacion<br/>
+│   ├── <strong>AuthProvider.jsx</strong> &nbsp;&nbsp;&nbsp;&nbsp; ← Proveedor que envuelve la app<br/>
+│   ├── <strong>ProtectedRoute.jsx</strong> &nbsp; ← Guardia de rutas protegidas<br/>
+│   └── <strong>useAuth.js</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ← Hook personalizado para acceder al auth<br/>
+├── components/<br/>
+│   ├── <strong>EmptyState.jsx</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ← Estado vacio reutilizable (NUEVO)<br/>
+│   ├── <strong>ErrorMessage.jsx</strong> &nbsp;&nbsp;&nbsp; ← Mensaje de error reutilizable (NUEVO)<br/>
+│   ├── <strong>LoadingSpinner.jsx</strong> &nbsp; ← Spinner de carga reutilizable (NUEVO)<br/>
+│   ├── <strong>Navbar.jsx</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ← Barra de navegacion + sidebar (MODIFICADO)<br/>
+│   ├── <strong>PageHeader.jsx</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ← Cabecera de pagina reutilizable (NUEVO)<br/>
+│   ├── <strong>RecipeCard.jsx</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ← Tarjeta de receta para listados (NUEVO)<br/>
+│   └── <strong>RecipeGrid.jsx</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ← Grid responsive de tarjetas (NUEVO)<br/>
+├── layouts/<br/>
+│   └── <strong>ProtectedLayout.jsx</strong>  ← Layout para paginas protegidas (MODIFICADO)<br/>
+├── pages/<br/>
+│   ├── <strong>Home.jsx</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ← Pagina principal con todas las recetas (MODIFICADO)<br/>
+│   ├── <strong>Login.jsx</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ← Pagina de inicio de sesion (MODIFICADO)<br/>
+│   ├── <strong>MyRecipes.jsx</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ← Mis recetas del usuario logueado (MODIFICADO)<br/>
+│   ├── <strong>RecipeDetail.jsx</strong> &nbsp;&nbsp;&nbsp; ← Detalle completo de una receta (NUEVO)<br/>
+│   └── <strong>Register.jsx</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ← Pagina de registro de usuario (NUEVO)<br/>
+├── <strong>index.css</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ← Directivas de Tailwind CSS<br/>
+└── <strong>main.jsx</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ← Punto de entrada + rutas (MODIFICADO)
+    </div>
+  </section>
+
+  <!-- 2. CONCEPTOS REACT -->
+  <section id="conceptos-react">
+    <h2>2. Conceptos de React utilizados</h2>
+
+    <h3>2.1 Componentes funcionales</h3>
+    <p>Todas las piezas de la interfaz son <strong>componentes funcionales</strong>: funciones de JavaScript que devuelven JSX (una mezcla de HTML y JavaScript).</p>
+    <pre><code><span class="highlight">export default function</span> RecipeCard({ recipe }) {
+  <span class="highlight-green">// 'recipe' es una "prop" (propiedad) que recibe del padre</span>
+  return (
+    &lt;article&gt;
+      &lt;h3&gt;{recipe.titulo}&lt;/h3&gt;  <span class="highlight-green">// Las {} insertan JavaScript en el HTML</span>
+    &lt;/article&gt;
+  );
+}</code></pre>
+    <div class="concept-box">
+      <strong>Concepto clave - Props:</strong> Las props son los datos que un componente padre pasa a un componente hijo. Son de solo lectura: el hijo no puede modificarlas. En el ejemplo, <code>recipe</code> es una prop.
+    </div>
+
+    <h3>2.2 useState - Estado local</h3>
+    <p><code>useState</code> permite que un componente "recuerde" datos entre renderizados. Cuando el estado cambia, React vuelve a pintar el componente automaticamente.</p>
+    <pre><code><span class="highlight">const</span> [recipes, setRecipes] = <span class="highlight">useState</span>([]);
+<span class="highlight-green">// recipes    → valor actual (empieza como array vacio [])</span>
+<span class="highlight-green">// setRecipes → funcion para cambiar el valor</span>
+
+<span class="highlight-green">// Cuando haces setRecipes([...nuevos datos]), React re-renderiza</span>
+<span class="highlight-green">// el componente mostrando los datos nuevos.</span></code></pre>
+    <p>Se usa en practicamente todas las paginas para gestionar: datos de formularios, listas de recetas, estados de carga, mensajes de error, etc.</p>
+
+    <h3>2.3 useEffect - Efectos secundarios</h3>
+    <p><code>useEffect</code> ejecuta codigo cuando el componente se monta (aparece en pantalla) o cuando ciertos datos cambian.</p>
+    <pre><code><span class="highlight">useEffect</span>(() => {
+  <span class="highlight-green">// Este codigo se ejecuta al montarse el componente</span>
+  async function load() {
+    const res = await api.get("/recipes");
+    setRecipes(res.data.data);
+  }
+  load();
+}, []);  <span class="highlight-green">// [] = solo se ejecuta una vez al montar</span></code></pre>
+    <div class="concept-box">
+      <strong>Concepto clave - Array de dependencias:</strong> El segundo parametro <code>[]</code> es el array de dependencias. Si esta vacio, el efecto solo se ejecuta una vez. Si tiene variables como <code>[id]</code>, se vuelve a ejecutar cada vez que <code>id</code> cambie. Esto se ve en <code>RecipeDetail.jsx</code> donde el efecto depende del <code>id</code> de la URL.
+    </div>
+
+    <h3>2.4 useContext - Contexto global</h3>
+    <p>El contexto permite compartir datos entre componentes sin tener que pasarlos como props a traves de todos los niveles intermedios.</p>
+    <pre><code><span class="highlight-green">// AuthContext.jsx - Se crea el contexto</span>
+<span class="highlight">export const</span> AuthContext = createContext(null);
+
+<span class="highlight-green">// AuthProvider.jsx - Se rellena el contexto con datos</span>
+&lt;AuthContext.Provider value={{ token, setToken, user, setUser }}&gt;
+  {children}
+&lt;/AuthContext.Provider&gt;
+
+<span class="highlight-green">// useAuth.js - Hook para consumir el contexto facilmente</span>
+<span class="highlight">export function</span> useAuth() {
+  return useContext(AuthContext);
+}
+
+<span class="highlight-green">// En cualquier componente hijo:</span>
+const { token, setToken } = useAuth();  <span class="highlight-green">// Acceso directo</span></code></pre>
+
+    <h3>2.5 useMemo - Memorizacion</h3>
+    <p><code>useMemo</code> evita que React recree un objeto en cada renderizado, mejorando el rendimiento. Se usa en <code>AuthProvider.jsx</code>:</p>
+    <pre><code>const value = <span class="highlight">useMemo</span>(
+  () => ({ token, setToken, user, setUser }),
+  [token, user]  <span class="highlight-green">// Solo recrea el objeto si token o user cambian</span>
+);</code></pre>
+
+    <h3>2.6 Renderizado condicional</h3>
+    <p>React permite mostrar u ocultar elementos segun condiciones, usando el operador <code>&amp;&amp;</code> o el ternario <code>? :</code>:</p>
+    <pre><code><span class="highlight-green">// Mostrar solo si loading es true:</span>
+{loading <span class="highlight">&amp;&amp;</span> &lt;LoadingSpinner /&gt;}
+
+<span class="highlight-green">// Mostrar uno u otro:</span>
+{loading <span class="highlight">?</span> "Entrando..." <span class="highlight">:</span> "Entrar"}
+
+<span class="highlight-green">// Mostrar solo si la receta tiene tiempo:</span>
+{recipe.tiempo <span class="highlight">&amp;&amp;</span> &lt;span&gt;{recipe.tiempo}&lt;/span&gt;}</code></pre>
+  </section>
+
+  <!-- 3. CONCEPTOS TAILWIND -->
+  <section id="conceptos-tailwind">
+    <h2>3. Conceptos de Tailwind CSS utilizados</h2>
+
+    <h3>3.1 ¿Que es Tailwind?</h3>
+    <p>Tailwind CSS es un framework de CSS que usa <strong>clases de utilidad</strong>: clases pequenas que aplican una sola propiedad CSS cada una. En lugar de escribir CSS en archivos separados, escribes las clases directamente en el HTML/JSX.</p>
+    <pre><code><span class="highlight-green">&lt;!-- CSS tradicional --&gt;</span>
+&lt;div class="mi-boton"&gt;Entrar&lt;/div&gt;
+.mi-boton { background: green; padding: 12px; border-radius: 8px; }
+
+<span class="highlight-green">&lt;!-- Con Tailwind --&gt;</span>
+&lt;div class="<span class="highlight">bg-green-500 p-3 rounded-lg</span>"&gt;Entrar&lt;/div&gt;</code></pre>
+
+    <h3>3.2 Clases mas usadas en el proyecto</h3>
+    <table>
+      <tr><th>Clase Tailwind</th><th>CSS equivalente</th><th>Donde se usa</th></tr>
+      <tr><td><code>flex</code></td><td><code>display: flex</code></td><td>Layout de elementos en linea</td></tr>
+      <tr><td><code>grid grid-cols-2</code></td><td><code>display: grid; grid-template-columns: repeat(2, 1fr)</code></td><td>Grid de tarjetas de recetas</td></tr>
+      <tr><td><code>p-4</code>, <code>px-3</code>, <code>py-2</code></td><td><code>padding</code> (total, horizontal, vertical)</td><td>Espaciado interno</td></tr>
+      <tr><td><code>m-4</code>, <code>mt-2</code>, <code>mb-6</code></td><td><code>margin</code> (total, top, bottom)</td><td>Espaciado externo</td></tr>
+      <tr><td><code>rounded-xl</code>, <code>rounded-2xl</code></td><td><code>border-radius: 12px / 16px</code></td><td>Bordes redondeados</td></tr>
+      <tr><td><code>shadow-md</code>, <code>shadow-lg</code></td><td><code>box-shadow</code></td><td>Sombras en tarjetas</td></tr>
+      <tr><td><code>text-sm</code>, <code>text-2xl</code></td><td><code>font-size</code></td><td>Tamanos de texto</td></tr>
+      <tr><td><code>font-bold</code>, <code>font-semibold</code></td><td><code>font-weight</code></td><td>Peso de fuente</td></tr>
+      <tr><td><code>text-brand-navy</code></td><td><code>color: #1B2A4A</code></td><td>Color personalizado definido en config</td></tr>
+      <tr><td><code>bg-brand-cream</code></td><td><code>background: #F8F6F3</code></td><td>Fondo personalizado</td></tr>
+      <tr><td><code>transition-all</code></td><td><code>transition: all</code></td><td>Animaciones suaves</td></tr>
+      <tr><td><code>hover:shadow-xl</code></td><td>Sombra al pasar el raton</td><td>Efectos hover en tarjetas</td></tr>
+      <tr><td><code>animate-spin</code></td><td>Animacion de rotacion</td><td>Spinner de carga</td></tr>
+    </table>
+
+    <h3>3.3 Responsive Design</h3>
+    <p>Tailwind usa prefijos para aplicar estilos segun el tamano de pantalla. El enfoque es <strong>mobile-first</strong>: primero se define para movil, y luego se modifican para pantallas mas grandes.</p>
+    <pre><code><span class="highlight-green">&lt;!-- 1 columna en movil, 2 en tablet (sm), 3 en desktop (lg), 4 en grande (xl) --&gt;</span>
+&lt;div class="<span class="highlight">grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4</span>"&gt;</code></pre>
+    <table>
+      <tr><th>Prefijo</th><th>Tamano minimo</th><th>Dispositivo tipico</th></tr>
+      <tr><td>(sin prefijo)</td><td>0px</td><td>Movil</td></tr>
+      <tr><td><code>sm:</code></td><td>640px</td><td>Movil grande / Tablet</td></tr>
+      <tr><td><code>md:</code></td><td>768px</td><td>Tablet</td></tr>
+      <tr><td><code>lg:</code></td><td>1024px</td><td>Escritorio</td></tr>
+      <tr><td><code>xl:</code></td><td>1280px</td><td>Escritorio grande</td></tr>
+    </table>
+
+    <h3>3.4 Colores personalizados (Brand)</h3>
+    <p>En <code>tailwind.config.cjs</code> se definen los colores de la marca FoodSynk para usarlos como clases:</p>
+    <pre><code>colors: {
+  brand: {
+    coral: "<span class="highlight">#E84C3D</span>",       <span class="highlight-green">// Rojo del logo (botones, acentos)</span>
+    green: "<span class="highlight-green">#2D6A4F</span>",       <span class="highlight-green">// Verde principal (enlaces activos)</span>
+    "green-light": "#A7D7C5", <span class="highlight-green">// Verde claro (fondos, etiquetas)</span>
+    "green-dark": "#1B4332",  <span class="highlight-green">// Verde oscuro (textos oscuros)</span>
+    orange: "<span class="highlight-orange">#E8713A</span>",      <span class="highlight-green">// Naranja (gradientes)</span>
+    navy: "#1B2A4A",          <span class="highlight-green">// Azul oscuro (textos, sidebar)</span>
+    cream: "#F8F6F3",         <span class="highlight-green">// Crema (fondos generales)</span>
+  }
+}</code></pre>
+    <p>Esto permite escribir <code>text-brand-coral</code> en vez de <code>text-[#E84C3D]</code>.</p>
+
+    <h3>3.5 Clases arbitrarias (brackets)</h3>
+    <p>El Login y Register usan valores CSS arbitrarios con la sintaxis <code>[valor]</code> de Tailwind:</p>
+    <pre><code><span class="highlight-green">&lt;!-- Color especifico no definido en la config --&gt;</span>
+&lt;div class="bg-<span class="highlight">[#f6f2ea]</span>"&gt;
+
+<span class="highlight-green">&lt;!-- Sombra personalizada --&gt;</span>
+&lt;div class="shadow-<span class="highlight">[0_20px_60px_-40px_rgba(63,47,36,0.7)]</span>"&gt;</code></pre>
+  </section>
+
+  <!-- 4. AUTENTICACION -->
+  <section id="auth">
+    <h2>4. Sistema de autenticacion</h2>
+    <p>La autenticacion usa <strong>Bearer Tokens</strong> con Laravel Sanctum. El flujo es:</p>
+    <ol>
+      <li>El usuario escribe email y contrasena en el Login</li>
+      <li>Se envia un POST a <code>/api/login</code></li>
+      <li>El backend devuelve un <code>token</code> y los datos del <code>user</code></li>
+      <li>El token se guarda en <code>sessionStorage</code> (se borra al cerrar el navegador)</li>
+      <li>Todas las peticiones siguientes incluyen el token en la cabecera <code>Authorization: Bearer {token}</code></li>
+      <li>Al cerrar sesion, se envia POST a <code>/api/logout</code> y se borra el token local</li>
+    </ol>
+
+    <h3>4.1 AuthContext.jsx</h3>
+    <span class="file-path">src/auth/AuthContext.jsx</span>
+    <p>Crea el contexto de React. Un contexto es como un "almacen global" que cualquier componente puede leer.</p>
+    <pre><code>import { createContext } from "react";
+export const AuthContext = <span class="highlight">createContext</span>(null);
+<span class="highlight-green">// Valor inicial: null (no hay usuario logueado)</span></code></pre>
+
+    <h3>4.2 AuthProvider.jsx</h3>
+    <span class="file-path">src/auth/AuthProvider.jsx</span>
+    <p>Envuelve toda la aplicacion y provee los datos de autenticacion a todos los componentes hijos:</p>
+    <ul>
+      <li><code>token</code> - El token JWT del usuario logueado (o null)</li>
+      <li><code>setToken</code> - Funcion para cambiar el token</li>
+      <li><code>user</code> - Datos del usuario (nombre, email...)</li>
+      <li><code>setUser</code> - Funcion para cambiar los datos del usuario</li>
+    </ul>
+    <p>Al montar el componente, comprueba si hay un token guardado en <code>sessionStorage</code> y lo restaura. Cuando el token cambia, lo sincroniza con <code>sessionStorage</code>.</p>
+
+    <h3>4.3 ProtectedRoute.jsx</h3>
+    <span class="file-path">src/auth/ProtectedRoute.jsx</span>
+    <p>Es un "guardia" que impide el acceso a rutas protegidas si no hay token:</p>
+    <pre><code>export default function ProtectedRoute() {
+  const { token } = useAuth();
+  if (!token) return &lt;<span class="highlight">Navigate</span> to="/" replace /&gt;;  <span class="highlight-green">// Redirige al login</span>
+  return &lt;<span class="highlight">Outlet</span> /&gt;;  <span class="highlight-green">// Permite ver la pagina solicitada</span>
+}</code></pre>
+
+    <h3>4.4 useAuth.js</h3>
+    <span class="file-path">src/auth/useAuth.js</span>
+    <p>Hook personalizado que simplifica el acceso al contexto. En cualquier componente solo hay que escribir:</p>
+    <pre><code>const { token, user, setToken, setUser } = <span class="highlight">useAuth</span>();</code></pre>
+  </section>
+
+  <!-- 5. ROUTING -->
+  <section id="routing">
+    <h2>5. Enrutamiento (Routing)</h2>
+    <p>Se usa <code>react-router-dom</code> v7 para la navegacion entre paginas sin recargar el navegador (SPA - Single Page Application).</p>
+
+    <h3>5.1 Estructura de rutas</h3>
+    <span class="file-path">src/main.jsx</span>
+    <pre><code>&lt;Routes&gt;
+  <span class="highlight-green">{/* Rutas publicas - accesibles sin login */}</span>
+  &lt;Route path="<span class="highlight">/</span>" element={&lt;Login /&gt;} /&gt;
+  &lt;Route path="<span class="highlight">/register</span>" element={&lt;Register /&gt;} /&gt;
+
+  <span class="highlight-green">{/* Rutas protegidas - requieren token */}</span>
+  &lt;Route element={&lt;<span class="highlight">ProtectedRoute</span> /&gt;}&gt;
+    &lt;Route element={&lt;<span class="highlight">ProtectedLayout</span> /&gt;}&gt;
+      &lt;Route path="<span class="highlight">/home</span>" element={&lt;Home /&gt;} /&gt;
+      &lt;Route path="<span class="highlight">/my-recipes</span>" element={&lt;MyRecipes /&gt;} /&gt;
+      &lt;Route path="<span class="highlight">/recipes/:id</span>" element={&lt;RecipeDetail /&gt;} /&gt;
+    &lt;/Route&gt;
+  &lt;/Route&gt;
+&lt;/Routes&gt;</code></pre>
+
+    <h3>5.2 Rutas anidadas y Outlet</h3>
+    <p>Las rutas estan anidadas en dos niveles:</p>
+    <ul>
+      <li><code>ProtectedRoute</code> - Comprueba si hay token. Si no, redirige al login. Si si, renderiza un <code>&lt;Outlet /&gt;</code> que muestra el siguiente nivel.</li>
+      <li><code>ProtectedLayout</code> - Anade la barra de navegacion y el layout comun. Su <code>&lt;Outlet /&gt;</code> muestra la pagina concreta (Home, MyRecipes, etc.).</li>
+    </ul>
+
+    <h3>5.3 Parametros de ruta</h3>
+    <p>La ruta <code>/recipes/:id</code> tiene un parametro dinamico <code>:id</code>. En <code>RecipeDetail.jsx</code> se extrae asi:</p>
+    <pre><code>const { id } = <span class="highlight">useParams</span>();  <span class="highlight-green">// Si la URL es /recipes/5, id = "5"</span></code></pre>
+
+    <h3>5.4 Navegacion programatica</h3>
+    <pre><code>const navigate = <span class="highlight">useNavigate</span>();
+navigate("/home");          <span class="highlight-green">// Ir a /home</span>
+navigate(-1);               <span class="highlight-green">// Ir atras (como el boton del navegador)</span>
+navigate("/", { replace: true }); <span class="highlight-green">// Reemplazar el historial (no se puede volver atras)</span></code></pre>
+  </section>
+
+  <!-- 6. COMPONENTES -->
+  <section id="componentes">
+    <h2>6. Componentes reutilizables</h2>
+    <p>Los componentes reutilizables son piezas de interfaz que se usan en mas de un sitio. Esto evita duplicar codigo y hace la app mas facil de mantener.</p>
+
+    <h3>6.1 Navbar.jsx</h3>
+    <span class="file-path">src/components/Navbar.jsx</span>
+    <span class="badge badge-component">Componente</span>
+    <span class="badge badge-modified">Modificado</span>
+    <p>Barra de navegacion con sidebar lateral desplegable. Contiene:</p>
+    <ul>
+      <li><strong>Header fijo</strong> (parte superior): icono hamburguesa, logo "FoodSynk", boton "Cerrar sesion"</li>
+      <li><strong>Sidebar</strong> (panel lateral izquierdo): se abre al pulsar el hamburguesa. Contiene enlaces a Home y Mis Recetas con indicador visual de pagina activa, y boton de cerrar sesion abajo</li>
+      <li><strong>Overlay</strong>: capa oscura semitransparente que aparece detras del sidebar para cerrarlo al hacer clic</li>
+    </ul>
+    <h4>Conceptos React en este componente:</h4>
+    <ul>
+      <li><code>useState(false)</code> para controlar si el sidebar esta abierto o cerrado</li>
+      <li><code>useLocation()</code> para saber en que pagina estamos y resaltar el enlace activo</li>
+      <li><code>useNavigate()</code> para navegar programaticamente</li>
+    </ul>
+    <h4>Conceptos Tailwind en este componente:</h4>
+    <ul>
+      <li><code>sticky top-0 z-30</code> - El header se queda fijo arriba al hacer scroll</li>
+      <li><code>fixed inset-0 z-40 bg-black/40</code> - Overlay a pantalla completa con 40% de opacidad</li>
+      <li><code>transform transition-transform duration-300</code> - Animacion suave del sidebar</li>
+      <li><code>translate-x-0</code> vs <code>-translate-x-full</code> - Sidebar visible vs oculto (movido fuera de pantalla)</li>
+      <li><code>backdrop-blur-sm</code> - Efecto de desenfoque en el header</li>
+    </ul>
+
+    <h3>6.2 RecipeCard.jsx</h3>
+    <span class="file-path">src/components/RecipeCard.jsx</span>
+    <span class="badge badge-component">Componente</span>
+    <span class="badge badge-new">Nuevo</span>
+    <p>Tarjeta individual de receta usada en los listados (Home y Mis Recetas). Muestra:</p>
+    <ul>
+      <li><strong>Imagen</strong> de la receta (o icono placeholder si no hay foto)</li>
+      <li><strong>Titulo</strong> de la receta</li>
+      <li><strong>Tiempo</strong> de preparacion (si existe en los datos)</li>
+      <li><strong>Etiquetas/tags</strong> (si existen en los datos)</li>
+      <li><strong>Preview</strong> de los primeros pasos</li>
+    </ul>
+    <p>Al hacer clic, navega a <code>/recipes/{id}</code> para ver el detalle completo.</p>
+    <h4>Conceptos Tailwind:</h4>
+    <ul>
+      <li><code>group</code> y <code>group-hover:scale-105</code> - Efecto de zoom en la imagen cuando el raton esta sobre toda la tarjeta</li>
+      <li><code>hover:-translate-y-1 hover:shadow-xl</code> - La tarjeta sube ligeramente y aumenta su sombra al pasar el raton</li>
+      <li><code>line-clamp-2</code> - Limita el texto a 2 lineas maximo con puntos suspensivos</li>
+      <li><code>truncate</code> - Corta el titulo si es muy largo con "..."</li>
+      <li><code>loading="lazy"</code> - Atributo HTML que retrasa la carga de imagenes fuera de pantalla (mejora rendimiento)</li>
+    </ul>
+
+    <h3>6.3 RecipeGrid.jsx</h3>
+    <span class="file-path">src/components/RecipeGrid.jsx</span>
+    <span class="badge badge-component">Componente</span>
+    <span class="badge badge-new">Nuevo</span>
+    <p>Grid responsive que recibe un array de recetas y renderiza una <code>RecipeCard</code> por cada una:</p>
+    <pre><code>&lt;div class="<span class="highlight">grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5</span>"&gt;
+  {recipes.map(recipe =&gt; &lt;RecipeCard key={recipe.id} recipe={recipe} /&gt;)}
+&lt;/div&gt;</code></pre>
+    <p>Se usa en <code>Home.jsx</code> y <code>MyRecipes.jsx</code>. Si manana necesitas otro listado de recetas, solo tienes que usar este componente.</p>
+
+    <h3>6.4 LoadingSpinner.jsx</h3>
+    <span class="file-path">src/components/LoadingSpinner.jsx</span>
+    <span class="badge badge-component">Componente</span>
+    <span class="badge badge-new">Nuevo</span>
+    <p>Spinner animado de carga. Acepta una prop <code>text</code> opcional:</p>
+    <pre><code>&lt;LoadingSpinner /&gt;                    <span class="highlight-green">// Muestra "Cargando..."</span>
+&lt;LoadingSpinner text="Buscando..." /&gt;  <span class="highlight-green">// Texto personalizado</span></code></pre>
+    <h4>Tailwind:</h4>
+    <ul>
+      <li><code>animate-spin</code> - Rotacion continua</li>
+      <li><code>border-4 border-brand-green-light border-t-brand-green</code> - Circulo con un segmento mas oscuro que gira</li>
+    </ul>
+
+    <h3>6.5 EmptyState.jsx</h3>
+    <span class="file-path">src/components/EmptyState.jsx</span>
+    <span class="badge badge-component">Componente</span>
+    <span class="badge badge-new">Nuevo</span>
+    <p>Componente para mostrar cuando no hay datos. Acepta:</p>
+    <ul>
+      <li><code>icon</code> - Elemento JSX con un icono SVG</li>
+      <li><code>title</code> - Texto principal ("No hay recetas todavia")</li>
+      <li><code>subtitle</code> - Texto secundario opcional</li>
+    </ul>
+
+    <h3>6.6 ErrorMessage.jsx</h3>
+    <span class="file-path">src/components/ErrorMessage.jsx</span>
+    <span class="badge badge-component">Componente</span>
+    <span class="badge badge-new">Nuevo</span>
+    <p>Caja de error roja reutilizable. Si <code>message</code> es falsy (null, "", undefined), no renderiza nada.</p>
+
+    <h3>6.7 PageHeader.jsx</h3>
+    <span class="file-path">src/components/PageHeader.jsx</span>
+    <span class="badge badge-component">Componente</span>
+    <span class="badge badge-new">Nuevo</span>
+    <p>Cabecera estandar de pagina con titulo y subtitulo opcional. Garantiza consistencia visual.</p>
+  </section>
+
+  <!-- 7. PAGINAS -->
+  <section id="paginas">
+    <h2>7. Paginas</h2>
+
+    <h3>7.1 Login.jsx</h3>
+    <span class="file-path">src/pages/Login.jsx</span>
+    <span class="badge badge-page">Pagina</span>
+    <span class="badge badge-modified">Modificado</span>
+    <p>Pagina de inicio de sesion con diseno a dos paneles en escritorio:</p>
+    <ul>
+      <li><strong>Panel izquierdo:</strong> Formulario con email, contrasena y boton "Entrar"</li>
+      <li><strong>Panel derecho:</strong> Informacion sobre FoodSynk (cards de Recetas, Listas, Menus, Tiempo)</li>
+      <li><strong>Enlace a registro:</strong> "¿No tienes cuenta? Registrate"</li>
+    </ul>
+    <h4>Cambios de seguridad aplicados:</h4>
+    <ul>
+      <li>Eliminado texto "Filtros de seguridad activos" y "Sanitizado y validado" (revelaba informacion interna)</li>
+      <li>Eliminada tarjeta "Seguridad" del panel informativo</li>
+      <li>Eliminado consejo sobre contrasenas (evita dar pistas sobre la politica)</li>
+      <li>Eliminado <code>console.error("LOGIN ERROR:", err)</code> (exponia datos en la consola del navegador)</li>
+      <li>Eliminado <code>JSON.stringify(err.response.data)</code> del manejo de errores (exponia estructura del backend)</li>
+      <li>Los errores ahora muestran mensajes genericos segun el codigo HTTP (401, 422, 429)</li>
+    </ul>
+    <h4>Validacion del formulario:</h4>
+    <ul>
+      <li>Email: regex que valida formato, se elimina espacios, se normaliza a minusculas, maximo 120 caracteres</li>
+      <li>Contrasena: minimo 6 caracteres, maximo 72 (limite de bcrypt)</li>
+      <li>El boton "Entrar" se desactiva hasta que ambos campos son validos</li>
+      <li>Los errores de validacion solo aparecen despues de tocar el campo (<code>onBlur</code>)</li>
+    </ul>
+
+    <h3>7.2 Register.jsx</h3>
+    <span class="file-path">src/pages/Register.jsx</span>
+    <span class="badge badge-page">Pagina</span>
+    <span class="badge badge-new">Nuevo</span>
+    <p>Pagina de registro con la misma estetica que el Login. Campos:</p>
+    <ul>
+      <li><strong>Nombre:</strong> minimo 2 caracteres, maximo 60</li>
+      <li><strong>Email:</strong> misma validacion que en Login</li>
+      <li><strong>Contrasena:</strong> minimo 6 caracteres, maximo 72</li>
+      <li><strong>Confirmar contrasena:</strong> debe coincidir con la contrasena</li>
+    </ul>
+    <p>Envia POST a <code>/api/register</code> con <code>password_confirmation</code> (formato que espera Laravel). Al registrarse, guarda el token y navega a <code>/home</code>.</p>
+    <p>Enlace al Login: "¿Ya tienes cuenta? Inicia sesion".</p>
+
+    <h3>7.3 Home.jsx</h3>
+    <span class="file-path">src/pages/Home.jsx</span>
+    <span class="badge badge-page">Pagina</span>
+    <span class="badge badge-modified">Modificado</span>
+    <p>Pagina principal que muestra <strong>todas las recetas</strong> del sistema en un grid de tarjetas.</p>
+    <h4>Flujo:</h4>
+    <ol>
+      <li>Al montarse, hace GET a <code>/api/recipes</code></li>
+      <li>Mientras carga, muestra <code>LoadingSpinner</code></li>
+      <li>Si hay error, muestra <code>ErrorMessage</code></li>
+      <li>Si no hay recetas, muestra <code>EmptyState</code></li>
+      <li>Si hay recetas, muestra <code>RecipeGrid</code> con las tarjetas</li>
+    </ol>
+    <p>Ahora usa componentes reutilizables en vez de tener todo el HTML inline.</p>
+
+    <h3>7.4 MyRecipes.jsx</h3>
+    <span class="file-path">src/pages/MyRecipes.jsx</span>
+    <span class="badge badge-page">Pagina</span>
+    <span class="badge badge-modified">Modificado</span>
+    <p>Identica estructura que Home pero hace GET a <code>/api/my-recipes</code>, que devuelve solo las recetas del usuario logueado. Usa los mismos componentes reutilizables.</p>
+
+    <h3>7.5 RecipeDetail.jsx</h3>
+    <span class="file-path">src/pages/RecipeDetail.jsx</span>
+    <span class="badge badge-page">Pagina</span>
+    <span class="badge badge-new">Nuevo</span>
+    <p>Vista completa de una receta individual. Se accede al hacer clic en una <code>RecipeCard</code>.</p>
+    <h4>Contenido:</h4>
+    <ul>
+      <li>Boton "Volver" (navega a la pagina anterior)</li>
+      <li>Imagen grande de la receta</li>
+      <li>Titulo de la receta</li>
+      <li>Tiempo de preparacion y etiquetas (si existen)</li>
+      <li>Lista de ingredientes (si la API los devuelve, compatible con formato <code>pivot</code> de Laravel)</li>
+      <li>Pasos de preparacion completos</li>
+    </ul>
+    <h4>Concepto React clave - useParams:</h4>
+    <pre><code>const { id } = useParams();
+<span class="highlight-green">// Extrae el :id de la URL /recipes/:id</span>
+<span class="highlight-green">// useEffect depende de [id]: si cambias de receta, recarga los datos</span></code></pre>
+  </section>
+
+  <!-- 8. LAYOUTS -->
+  <section id="layouts">
+    <h2>8. Layouts</h2>
+
+    <h3>8.1 ProtectedLayout.jsx</h3>
+    <span class="file-path">src/layouts/ProtectedLayout.jsx</span>
+    <span class="badge badge-modified">Modificado</span>
+    <p>Layout que envuelve todas las paginas protegidas. Proporciona:</p>
+    <ul>
+      <li>Fondo color crema (<code>bg-brand-cream</code>)</li>
+      <li>La barra de navegacion <code>Navbar</code></li>
+      <li>Un area de contenido centrada y con padding responsive</li>
+    </ul>
+    <pre><code>&lt;div className="<span class="highlight">min-h-screen bg-brand-cream</span>"&gt;
+  &lt;Navbar /&gt;
+  &lt;main className="<span class="highlight">px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto</span>"&gt;
+    &lt;Outlet /&gt;  <span class="highlight-green">// Aqui se renderiza Home, MyRecipes, RecipeDetail...</span>
+  &lt;/main&gt;
+&lt;/div&gt;</code></pre>
+    <div class="concept-box">
+      <strong>Concepto clave - Outlet:</strong> <code>&lt;Outlet /&gt;</code> es un componente de react-router-dom que actua como "hueco" donde se renderiza la ruta hija. Es como un <code>{children}</code> pero controlado por el router.
+    </div>
+  </section>
+
+  <!-- 9. API -->
+  <section id="api">
+    <h2>9. Comunicacion con la API</h2>
+
+    <h3>9.1 axios.js</h3>
+    <span class="file-path">src/api/axios.js</span>
+    <p>Configura una instancia de <strong>Axios</strong> (libreria HTTP) con:</p>
+    <ul>
+      <li><code>baseURL: "http://localhost:8000/api"</code> - Todas las peticiones van a esta base</li>
+      <li>Headers <code>Accept</code> y <code>Content-Type</code> como JSON</li>
+      <li>Un <strong>interceptor</strong> que automaticamente anade el token de autenticacion a cada peticion</li>
+    </ul>
+    <pre><code>api.interceptors.request.use((config) =&gt; {
+  const token = sessionStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `<span class="highlight">Bearer ${token}</span>`;
+  }
+  return config;
+});</code></pre>
+    <div class="concept-box">
+      <strong>Concepto clave - Interceptor:</strong> Un interceptor es una funcion que se ejecuta automaticamente antes de enviar cada peticion. Asi no tienes que anadir manualmente el token en cada llamada a la API.
+    </div>
+
+    <h3>9.2 Endpoints utilizados</h3>
+    <table>
+      <tr><th>Metodo</th><th>Endpoint</th><th>Descripcion</th><th>Usado en</th></tr>
+      <tr><td>POST</td><td>/api/login</td><td>Iniciar sesion</td><td>Login.jsx</td></tr>
+      <tr><td>POST</td><td>/api/register</td><td>Crear cuenta</td><td>Register.jsx</td></tr>
+      <tr><td>POST</td><td>/api/logout</td><td>Cerrar sesion</td><td>Navbar.jsx</td></tr>
+      <tr><td>GET</td><td>/api/recipes</td><td>Todas las recetas</td><td>Home.jsx</td></tr>
+      <tr><td>GET</td><td>/api/recipes/:id</td><td>Detalle de una receta</td><td>RecipeDetail.jsx</td></tr>
+      <tr><td>GET</td><td>/api/my-recipes</td><td>Recetas del usuario</td><td>MyRecipes.jsx</td></tr>
+    </table>
+
+    <h3>9.3 Manejo de respuestas paginadas</h3>
+    <p>Laravel puede devolver datos paginados (dentro de <code>res.data.data</code>) o sin paginar (directamente en <code>res.data</code>). El codigo maneja ambos casos:</p>
+    <pre><code>const data = res.data?.data ?? res.data;
+<span class="highlight-green">// Si res.data tiene una propiedad .data, usa esa (paginado)</span>
+<span class="highlight-green">// Si no, usa res.data directamente (sin paginar)</span></code></pre>
+  </section>
+
+  <!-- 10. SEGURIDAD -->
+  <section id="seguridad">
+    <h2>10. Analisis de seguridad (OWASP Top 10)</h2>
+    <p>Analisis de las medidas de seguridad del frontend segun las 10 vulnerabilidades mas criticas de OWASP:</p>
+
+    <h3>A01 - Broken Access Control (Control de acceso roto)</h3>
+    <span class="badge badge-security">Critico</span>
+    <table>
+      <tr><th>Medida implementada</th><th>Estado</th></tr>
+      <tr><td><code>ProtectedRoute</code> bloquea acceso sin token</td><td>Implementado</td></tr>
+      <tr><td><code>/my-recipes</code> solo devuelve recetas del usuario (backend)</td><td>Implementado (server-side)</td></tr>
+      <tr><td>Token se borra al cerrar sesion</td><td>Implementado</td></tr>
+      <tr><td>Redireccion al login si no hay token</td><td>Implementado</td></tr>
+    </table>
+    <div class="warning-box">
+      <strong>Mejora sugerida:</strong> Verificar la validez del token al cargar la app (no solo si existe, sino si sigue siendo valido en el servidor). Esto se puede hacer con un endpoint como <code>GET /api/user</code>.
+    </div>
+
+    <h3>A02 - Cryptographic Failures (Fallos criptograficos)</h3>
+    <span class="badge badge-security">Alto</span>
+    <table>
+      <tr><th>Medida implementada</th><th>Estado</th></tr>
+      <tr><td>HTTPS recomendado para produccion</td><td>Pendiente (solo en deploy)</td></tr>
+      <tr><td>Token en sessionStorage (se borra al cerrar navegador)</td><td>Implementado</td></tr>
+      <tr><td>Contrasena nunca se guarda en el frontend</td><td>Implementado</td></tr>
+    </table>
+    <div class="info-box">
+      <strong>Nota:</strong> <code>sessionStorage</code> es vulnerable a XSS (si alguien inyecta JavaScript en la pagina, puede leer el token). La alternativa mas segura seria usar cookies <code>httpOnly</code> gestionadas por el backend, pero requiere cambios en Laravel.
+    </div>
+
+    <h3>A03 - Injection (Inyeccion)</h3>
+    <span class="badge badge-security">Critico</span>
+    <table>
+      <tr><th>Medida implementada</th><th>Estado</th></tr>
+      <tr><td>Email validado con regex antes de enviar</td><td>Implementado</td></tr>
+      <tr><td>Email normalizado (trim + lowercase)</td><td>Implementado</td></tr>
+      <tr><td>Espacios eliminados del email</td><td>Implementado</td></tr>
+      <tr><td>Longitud maxima en todos los campos (maxLength)</td><td>Implementado</td></tr>
+      <tr><td>React escapa automaticamente el HTML (protege contra XSS)</td><td>Implementado (por React)</td></tr>
+      <tr><td>No se usa <code>dangerouslySetInnerHTML</code></td><td>Implementado</td></tr>
+    </table>
+
+    <h3>A04 - Insecure Design (Diseno inseguro)</h3>
+    <span class="badge badge-security">Alto</span>
+    <table>
+      <tr><th>Medida implementada</th><th>Estado</th></tr>
+      <tr><td>Boton desactivado hasta validacion completa</td><td>Implementado</td></tr>
+      <tr><td>Validacion en cliente Y servidor (defensa en profundidad)</td><td>Implementado</td></tr>
+      <tr><td>Mensajes de error genericos (no revelan si el email existe)</td><td>Implementado</td></tr>
+      <tr><td>Manejo de error 429 (rate limiting)</td><td>Implementado</td></tr>
+    </table>
+
+    <h3>A05 - Security Misconfiguration (Configuracion insegura)</h3>
+    <span class="badge badge-security">Medio</span>
+    <table>
+      <tr><th>Medida implementada</th><th>Estado</th></tr>
+      <tr><td>Eliminado <code>console.error</code> con datos sensibles</td><td>Implementado</td></tr>
+      <tr><td>Eliminado <code>JSON.stringify(err.response.data)</code></td><td>Implementado</td></tr>
+      <tr><td>No se muestra informacion tecnica al usuario</td><td>Implementado</td></tr>
+      <tr><td>Eliminados textos sobre medidas de seguridad del login</td><td>Implementado</td></tr>
+    </table>
+
+    <h3>A06 - Vulnerable and Outdated Components</h3>
+    <span class="badge badge-security">Medio</span>
+    <table>
+      <tr><th>Medida implementada</th><th>Estado</th></tr>
+      <tr><td>React 19, React Router 7, Axios actualizado</td><td>Implementado</td></tr>
+      <tr><td>Dependencias minimas (solo las necesarias)</td><td>Implementado</td></tr>
+    </table>
+    <div class="info-box">
+      <strong>Recomendacion:</strong> Ejecutar periodicamente <code>npm audit</code> para detectar vulnerabilidades en dependencias.
+    </div>
+
+    <h3>A07 - Identification and Authentication Failures</h3>
+    <span class="badge badge-security">Critico</span>
+    <table>
+      <tr><th>Medida implementada</th><th>Estado</th></tr>
+      <tr><td>Contrasena minimo 6 caracteres, maximo 72</td><td>Implementado</td></tr>
+      <tr><td>Token Bearer en cada peticion autenticada</td><td>Implementado</td></tr>
+      <tr><td>Token se elimina completamente al logout</td><td>Implementado</td></tr>
+      <tr><td>Redirect a login si token no existe</td><td>Implementado</td></tr>
+      <tr><td>Confirmacion de contrasena en registro</td><td>Implementado</td></tr>
+    </table>
+    <div class="warning-box">
+      <strong>Mejoras sugeridas:</strong> Aumentar minimo de contrasena a 8 caracteres. Implementar CAPTCHA o similar para prevenir ataques de fuerza bruta. Considerar 2FA (autenticacion en dos factores) para V2.
+    </div>
+
+    <h3>A08 - Software and Data Integrity Failures</h3>
+    <span class="badge badge-security">Medio</span>
+    <table>
+      <tr><th>Medida implementada</th><th>Estado</th></tr>
+      <tr><td>Bearer tokens (no vulnerable a CSRF como las cookies)</td><td>Implementado</td></tr>
+      <tr><td>Dependencias verificadas via npm</td><td>Implementado</td></tr>
+    </table>
+
+    <h3>A09 - Security Logging and Monitoring Failures</h3>
+    <span class="badge badge-security">Medio</span>
+    <table>
+      <tr><th>Medida implementada</th><th>Estado</th></tr>
+      <tr><td>Eliminados console.error/console.warn con datos sensibles</td><td>Implementado</td></tr>
+    </table>
+    <div class="warning-box">
+      <strong>Mejora sugerida:</strong> Implementar un servicio de logging centralizado (ej. Sentry) para errores criticos en produccion, sin exponer datos sensibles.
+    </div>
+
+    <h3>A10 - Server-Side Request Forgery (SSRF)</h3>
+    <span class="badge badge-security">Bajo</span>
+    <p>No aplica directamente al frontend. El frontend solo hace peticiones a la API propia (<code>localhost:8000/api</code>). La proteccion contra SSRF es responsabilidad del backend.</p>
+  </section>
+
+  <!-- 11. RESUMEN DE CAMBIOS -->
+  <section id="resumen-cambios">
+    <h2>11. Resumen de todos los cambios realizados</h2>
+
+    <h3>Archivos nuevos</h3>
+    <table>
+      <tr><th>Archivo</th><th>Descripcion</th></tr>
+      <tr>
+        <td><code>src/pages/Register.jsx</code></td>
+        <td>Pagina de registro con formulario de nombre, email, contrasena y confirmacion. Misma estetica que Login.</td>
+      </tr>
+      <tr>
+        <td><code>src/pages/RecipeDetail.jsx</code></td>
+        <td>Vista completa de una receta: imagen, titulo, tiempo, etiquetas, ingredientes, pasos. Boton volver.</td>
+      </tr>
+      <tr>
+        <td><code>src/components/RecipeCard.jsx</code></td>
+        <td>Tarjeta de receta reutilizable para listados. Imagen, titulo, tiempo, etiquetas, preview de pasos. Efectos hover.</td>
+      </tr>
+      <tr>
+        <td><code>src/components/RecipeGrid.jsx</code></td>
+        <td>Grid responsive que renderiza un array de RecipeCards. 1-4 columnas segun la pantalla.</td>
+      </tr>
+      <tr>
+        <td><code>src/components/LoadingSpinner.jsx</code></td>
+        <td>Spinner animado con texto configurable.</td>
+      </tr>
+      <tr>
+        <td><code>src/components/EmptyState.jsx</code></td>
+        <td>Componente para estados vacios con icono, titulo y subtitulo.</td>
+      </tr>
+      <tr>
+        <td><code>src/components/ErrorMessage.jsx</code></td>
+        <td>Caja de error roja reutilizable.</td>
+      </tr>
+      <tr>
+        <td><code>src/components/PageHeader.jsx</code></td>
+        <td>Cabecera de pagina con titulo y subtitulo estandarizados.</td>
+      </tr>
+      <tr>
+        <td><code>docs/documentacion-frontend.html</code></td>
+        <td>Este documento de documentacion completa.</td>
+      </tr>
+    </table>
+
+    <h3>Archivos modificados</h3>
+    <table>
+      <tr><th>Archivo</th><th>Cambios realizados</th></tr>
+      <tr>
+        <td><code>src/pages/Login.jsx</code></td>
+        <td>
+          <ul>
+            <li>Eliminado texto "Filtros de seguridad activos" y "Sanitizado y validado"</li>
+            <li>Eliminada tarjeta "Seguridad" del panel informativo (reemplazada por "Menus")</li>
+            <li>Eliminado consejo sobre contrasenas</li>
+            <li>Eliminado <code>console.error("LOGIN ERROR:", err)</code></li>
+            <li>Eliminado <code>JSON.stringify(err.response.data)</code> del manejo de errores</li>
+            <li>Errores ahora muestran mensajes genericos por codigo HTTP</li>
+            <li>Anadido enlace a la pagina de registro</li>
+            <li>Importado <code>Link</code> de react-router-dom</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td><code>src/components/Navbar.jsx</code></td>
+        <td>
+          <ul>
+            <li>Reescrito completamente: de barra horizontal simple a sidebar lateral con hamburguesa</li>
+            <li>Header fijo con logo, hamburguesa y boton cerrar sesion</li>
+            <li>Sidebar con animacion slide-in y overlay</li>
+            <li>Indicador visual de pagina activa (verde)</li>
+            <li>Eliminado <code>console.warn</code></li>
+            <li>Iconos SVG inline (sin dependencias externas)</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td><code>src/pages/Home.jsx</code></td>
+        <td>
+          <ul>
+            <li>De lista simple con estilos inline a grid de RecipeCards con Tailwind</li>
+            <li>Refactorizado para usar componentes reutilizables (PageHeader, LoadingSpinner, ErrorMessage, EmptyState, RecipeGrid)</li>
+            <li>Eliminado <code>console.error</code></li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td><code>src/pages/MyRecipes.jsx</code></td>
+        <td>
+          <ul>
+            <li>De lista con CSS modules a grid de RecipeCards con Tailwind</li>
+            <li>Refactorizado para usar componentes reutilizables</li>
+            <li>Eliminado <code>console.error</code></li>
+            <li>Eliminada importacion de MyRecipes.module.css</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td><code>src/layouts/ProtectedLayout.jsx</code></td>
+        <td>
+          <ul>
+            <li>Anadido fondo <code>bg-brand-cream</code></li>
+            <li>Anadido contenedor con padding responsive y max-width</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td><code>src/main.jsx</code></td>
+        <td>
+          <ul>
+            <li>Anadido import y ruta de <code>Register</code> (<code>/register</code>)</li>
+            <li>Anadido import y ruta de <code>RecipeDetail</code> (<code>/recipes/:id</code>)</li>
+          </ul>
+        </td>
+      </tr>
+    </table>
+
+    <h3>Archivos eliminados</h3>
+    <table>
+      <tr><th>Archivo</th><th>Razon</th></tr>
+      <tr>
+        <td><code>src/App.jsx</code></td>
+        <td>Contenia el template por defecto de Vite (contador). La app se define en main.jsx.</td>
+      </tr>
+      <tr>
+        <td><code>src/App.css</code></td>
+        <td>Estilos del template por defecto. Ya no se usa.</td>
+      </tr>
+      <tr>
+        <td><code>src/pages/MyRecipes.module.css</code></td>
+        <td>CSS modules reemplazados por clases de Tailwind.</td>
+      </tr>
+      <tr>
+        <td><code>src/pages/Login.module.css</code></td>
+        <td>CSS modules reemplazados por clases de Tailwind.</td>
+      </tr>
+    </table>
+
+    <h3>Patron de reutilizacion</h3>
+    <p>Antes, cada pagina tenia su propio HTML para loading, errores y estados vacios. Ahora todas usan los mismos componentes:</p>
+    <pre><code><span class="highlight-green">// ANTES (codigo repetido en cada pagina):</span>
+{loading &amp;&amp; &lt;p&gt;Cargando...&lt;/p&gt;}
+{error &amp;&amp; &lt;div className="..."&gt;{error}&lt;/div&gt;}
+
+<span class="highlight-green">// AHORA (componentes reutilizables):</span>
+{loading &amp;&amp; &lt;<span class="highlight">LoadingSpinner</span> /&gt;}
+{error &amp;&amp; &lt;<span class="highlight">ErrorMessage</span> message={error} /&gt;}</code></pre>
+    <p>Si manana quieres cambiar el diseno del spinner o del mensaje de error, solo modificas UN archivo y se actualiza en todas las paginas.</p>
+  </section>
+
+</div>
+
+<footer>
+  <p>FoodSynk &mdash; Documentacion del frontend &mdash; Generado para el proyecto DAW</p>
+</footer>
+
+</body>
+</html>

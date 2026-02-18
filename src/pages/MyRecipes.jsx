@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/axios";
-import "./MyRecipes.module.css";
+import PageHeader from "../components/PageHeader";
+import LoadingSpinner from "../components/LoadingSpinner";
+import ErrorMessage from "../components/ErrorMessage";
+import EmptyState from "../components/EmptyState";
+import RecipeGrid from "../components/RecipeGrid";
 
 export default function MyRecipes() {
   const [recipes, setRecipes] = useState([]);
@@ -8,69 +12,47 @@ export default function MyRecipes() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function loadRecipes() {
+    async function load() {
       try {
         setLoading(true);
         setError("");
-
         const res = await api.get("/my-recipes");
-
-        // Si tu API es paginada (Laravel Resource/Pagination)
         const data = res.data?.data ?? res.data;
-
-        setRecipes(data);
-      } catch (err) {
-        console.error(err);
+        setRecipes(Array.isArray(data) ? data : []);
+      } catch {
         setError("No se pudieron cargar tus recetas.");
       } finally {
         setLoading(false);
       }
     }
-
-    loadRecipes();
+    load();
   }, []);
 
   return (
-    <div className="my-recipes">
-      <h1 className="my-recipes__title">Mis recetas</h1>
+    <div>
+      <PageHeader
+        title="Mis Recetas"
+        subtitle="Recetas creadas por ti"
+      />
 
-      {loading && <p className="my-recipes__info">Cargando...</p>}
-
-      {!loading && error && <p className="my-recipes__error">{error}</p>}
+      {loading && <LoadingSpinner />}
+      {!loading && error && <ErrorMessage message={error} />}
 
       {!loading && !error && recipes.length === 0 && (
-        <p className="my-recipes__info">No tienes recetas todavía.</p>
+        <EmptyState
+          icon={
+            <svg className="w-16 h-16" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+            </svg>
+          }
+          title="No tienes recetas todavia"
+          subtitle="Las recetas que crees apareceran aqui"
+        />
       )}
 
-      <ul className="my-recipes__list">
-        {recipes.map((recipe) => (
-          <li className="my-recipes__item" key={recipe.id}>
-            <div className="my-recipes__card">
-              {recipe.foto && (
-                <img
-                  className="my-recipes__img"
-                  src={recipe.foto}
-                  alt={recipe.titulo ?? "Receta"}
-                  loading="lazy"
-                />
-              )}
-
-              <div className="my-recipes__content">
-                <h2 className="my-recipes__recipe-title">
-                  {recipe.titulo ?? "Sin título"}
-                </h2>
-
-                {recipe.pasos && (
-                  <p className="my-recipes__steps">
-                    {String(recipe.pasos).slice(0, 140)}
-                    {String(recipe.pasos).length > 140 ? "..." : ""}
-                  </p>
-                )}
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
+      {!loading && !error && recipes.length > 0 && (
+        <RecipeGrid recipes={recipes} />
+      )}
     </div>
   );
 }
