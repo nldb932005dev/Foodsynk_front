@@ -1,32 +1,72 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
 import PageHeader from "../components/PageHeader";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorMessage from "../components/ErrorMessage";
 import EmptyState from "../components/EmptyState";
 import RecipeGrid from "../components/RecipeGrid";
+import ConfirmModal from "../components/ConfirmModal";
 
 export default function MyRecipes() {
+  const navigate = useNavigate();
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Delete state
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
-    async function load() {
-      try {
-        setLoading(true);
-        setError("");
-        const res = await api.get("/my-recipes");
-        const data = res.data?.data ?? res.data;
-        setRecipes(Array.isArray(data) ? data : []);
-      } catch {
-        setError("No se pudieron cargar tus recetas.");
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
+    loadRecipes();
   }, []);
+
+  async function loadRecipes() {
+    try {
+      setLoading(true);
+      setError("");
+      const res = await api.get("/my-recipes");
+      const data = res.data?.data ?? res.data;
+      setRecipes(Array.isArray(data) ? data : []);
+    } catch {
+      setError("No se pudieron cargar tus recetas.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleEdit(recipe) {
+    navigate(`/my-recipes/${recipe.id}/edit`);
+  }
+
+  function handleDeleteRequest(recipe) {
+    setDeleteTarget(recipe);
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteTarget) return;
+
+    setDeleting(true);
+    try {
+      await api.delete(`/recipes/${deleteTarget.id}`);
+      setRecipes((prev) => prev.filter((r) => r.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } catch (err) {
+      const status = err?.response?.status;
+      if (status === 403) {
+        setError("No tienes permiso para eliminar esta receta.");
+      } else if (status === 404) {
+        // Already deleted, remove from list
+        setRecipes((prev) => prev.filter((r) => r.id !== deleteTarget.id));
+        setDeleteTarget(null);
+      } else {
+        setError("Error al eliminar la receta. Intentalo de nuevo.");
+      }
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
     <div>
@@ -51,8 +91,25 @@ export default function MyRecipes() {
       )}
 
       {!loading && !error && recipes.length > 0 && (
-        <RecipeGrid recipes={recipes} />
+        <RecipeGrid
+          recipes={recipes}
+          showActions
+          onEdit={handleEdit}
+          onDelete={handleDeleteRequest}
+        />
       )}
+
+      {/* Delete confirmation modal */}
+      <ConfirmModal
+        open={!!deleteTarget}
+        title="Eliminar receta"
+        message={`¿Estas seguro de que quieres eliminar "${deleteTarget?.titulo ?? "esta receta"}"? Esta accion no se puede deshacer.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTarget(null)}
+        loading={deleting}
+      />
     </div>
   );
 }

@@ -59,27 +59,28 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f6f2ea] text-[#3f2f24]">
+    <div className="min-h-screen bg-brand-cream text-brand-navy">
       <div className="mx-auto grid min-h-screen max-w-6xl grid-cols-1 gap-8 px-6 py-10 md:grid-cols-2 md:items-center">
+        {/* Form panel */}
         <div className="order-2 md:order-1">
-          <div className="rounded-3xl border border-[#d7ccb8] bg-[#fffaf2] p-8 shadow-[0_20px_60px_-40px_rgba(63,47,36,0.7)]">
+          <div className="rounded-3xl border border-brand-green-light/50 bg-white p-8 shadow-xl">
             <div className="mb-6">
-              <p className="text-xs uppercase tracking-[0.3em] text-[#5f7d5f]">
+              <p className="text-xs uppercase tracking-[0.3em] text-brand-green">
                 Foodsynk
               </p>
-              <h1 className="mt-2 text-3xl font-semibold leading-tight text-[#2f4a2f]">
+              <h1 className="mt-2 text-3xl font-semibold leading-tight text-brand-navy">
                 Bienvenida de vuelta
               </h1>
-              <p className="mt-2 text-sm text-[#6b5a4b]">
+              <p className="mt-2 text-sm text-gray-500">
                 Accede a tus recetas y menus.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              <label className="block text-sm font-medium text-[#4d3b2f]">
+              <label className="block text-sm font-medium text-brand-navy">
                 Email
                 <input
-                  className="mt-2 w-full rounded-xl border border-[#d8cbb6] bg-white/70 px-4 py-3 text-sm text-[#3f2f24] placeholder:text-[#9a8a7a] outline-none transition focus:border-[#5f7d5f] focus:ring-2 focus:ring-[#5f7d5f]/20"
+                  className="mt-2 w-full rounded-xl border border-gray-200 bg-brand-cream/50 px-4 py-3 text-sm text-brand-navy placeholder:text-gray-400 outline-none transition focus:border-brand-green focus:ring-2 focus:ring-brand-green/20"
                   value={email}
                   onChange={(e) =>
                     setEmail(e.target.value.replace(/\s+/g, ""))
@@ -93,16 +94,16 @@ export default function Login() {
                   required
                 />
                 {emailError && (
-                  <span className="mt-2 block text-xs text-[#8b5a44]">
+                  <span className="mt-2 block text-xs text-brand-coral">
                     {emailError}
                   </span>
                 )}
               </label>
 
-              <label className="block text-sm font-medium text-[#4d3b2f]">
+              <label className="block text-sm font-medium text-brand-navy">
                 Contrasena
                 <input
-                  className="mt-2 w-full rounded-xl border border-[#d8cbb6] bg-white/70 px-4 py-3 text-sm text-[#3f2f24] placeholder:text-[#9a8a7a] outline-none transition focus:border-[#4d8b7b] focus:ring-2 focus:ring-[#4d8b7b]/20"
+                  className="mt-2 w-full rounded-xl border border-gray-200 bg-brand-cream/50 px-4 py-3 text-sm text-brand-navy placeholder:text-gray-400 outline-none transition focus:border-brand-green focus:ring-2 focus:ring-brand-green/20"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onBlur={() =>
@@ -115,31 +116,31 @@ export default function Login() {
                   required
                 />
                 {passwordError && (
-                  <span className="mt-2 block text-xs text-[#8b5a44]">
+                  <span className="mt-2 block text-xs text-brand-coral">
                     {passwordError}
                   </span>
                 )}
               </label>
 
               <button
-                className="w-full rounded-xl bg-[#5f7d5f] px-4 py-3 text-sm font-semibold text-[#f7f1e6] transition hover:bg-[#537153] disabled:cursor-not-allowed disabled:bg-[#b8b1a5]"
+                className="w-full rounded-xl bg-brand-green px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-green-dark disabled:cursor-not-allowed disabled:bg-gray-300"
                 disabled={!canSubmit}
               >
                 {loading ? "Entrando..." : "Entrar"}
               </button>
 
               {error && (
-                <div className="rounded-xl border border-[#e7c7b7] bg-[#fff0e8] px-4 py-3 text-sm text-[#8b3b2f]">
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-brand-coral">
                   {error}
                 </div>
               )}
             </form>
 
-            <p className="mt-6 text-center text-sm text-[#6b5a4b]">
+            <p className="mt-6 text-center text-sm text-gray-500">
               ¿No tienes cuenta?{" "}
               <Link
                 to="/register"
-                className="font-semibold text-[#5f7d5f] hover:text-[#2f4a2f] transition-colors underline underline-offset-2"
+                className="font-semibold text-brand-green hover:text-brand-green-dark transition-colors underline underline-offset-2"
               >
                 Registrate
               </Link>
@@ -147,37 +148,38 @@ export default function Login() {
           </div>
         </div>
 
+        {/* Info panel */}
         <div className="order-1 md:order-2">
-          <div className="relative overflow-hidden rounded-3xl border border-[#d7ccb8] bg-gradient-to-br from-[#e6efe1] via-[#f1ebe0] to-[#d9ece7] p-8 shadow-[0_20px_60px_-45px_rgba(63,47,36,0.6)]">
-            <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#cfe2d4]/60 blur-2xl" />
-            <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-[#d6c2a8]/60 blur-2xl" />
+          <div className="relative overflow-hidden rounded-3xl border border-brand-green-light/50 bg-gradient-to-br from-brand-green-light/30 via-brand-cream to-brand-green-light/20 p-8 shadow-xl">
+            <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-brand-green-light/40 blur-2xl" />
+            <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-brand-orange/20 blur-2xl" />
             <div className="relative space-y-4">
-              <p className="text-xs uppercase tracking-[0.3em] text-[#4d8b7b]">
+              <p className="text-xs uppercase tracking-[0.3em] text-brand-green">
                 Planifica mejor
               </p>
-              <h2 className="text-2xl font-semibold text-[#2f4a2f]">
+              <h2 className="text-2xl font-semibold text-brand-navy">
                 Menus saludables sin complicaciones
               </h2>
-              <p className="text-sm text-[#6b5a4b]">
+              <p className="text-sm text-gray-500">
                 Guarda tus recetas favoritas, crea listas de compra y organiza tu
                 semana en minutos.
               </p>
-              <div className="grid grid-cols-2 gap-3 text-xs text-[#4d3b2f]">
-                <div className="rounded-xl border border-[#d7ccb8] bg-white/70 px-3 py-3">
-                  <p className="font-semibold text-[#2f5f52]">Recetas</p>
-                  <p>Organiza y edita tus platos.</p>
+              <div className="grid grid-cols-2 gap-3 text-xs text-brand-navy">
+                <div className="rounded-xl border border-brand-green-light/50 bg-white/70 px-3 py-3">
+                  <p className="font-semibold text-brand-green">Recetas</p>
+                  <p className="text-gray-500">Organiza y edita tus platos.</p>
                 </div>
-                <div className="rounded-xl border border-[#d7ccb8] bg-white/70 px-3 py-3">
-                  <p className="font-semibold text-[#2f5f52]">Listas</p>
-                  <p>Compra solo lo que necesitas.</p>
+                <div className="rounded-xl border border-brand-green-light/50 bg-white/70 px-3 py-3">
+                  <p className="font-semibold text-brand-green">Listas</p>
+                  <p className="text-gray-500">Compra solo lo que necesitas.</p>
                 </div>
-                <div className="rounded-xl border border-[#d7ccb8] bg-white/70 px-3 py-3">
-                  <p className="font-semibold text-[#2f5f52]">Menus</p>
-                  <p>Planifica tu semana.</p>
+                <div className="rounded-xl border border-brand-green-light/50 bg-white/70 px-3 py-3">
+                  <p className="font-semibold text-brand-green">Menus</p>
+                  <p className="text-gray-500">Planifica tu semana.</p>
                 </div>
-                <div className="rounded-xl border border-[#d7ccb8] bg-white/70 px-3 py-3">
-                  <p className="font-semibold text-[#2f5f52]">Tiempo</p>
-                  <p>Planifica en segundos.</p>
+                <div className="rounded-xl border border-brand-green-light/50 bg-white/70 px-3 py-3">
+                  <p className="font-semibold text-brand-green">Tiempo</p>
+                  <p className="text-gray-500">Planifica en segundos.</p>
                 </div>
               </div>
             </div>
