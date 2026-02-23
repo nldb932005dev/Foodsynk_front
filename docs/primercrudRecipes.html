@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FoodSynk - Primer CRUD de Recetas</title>
+  <style>
+    :root {
+      --navy: #1B2A4A;
+      --coral: #E84C3D;
+      --green: #2D6A4F;
+      --green-light: #A7D7C5;
+      --cream: #F8F6F3;
+      --orange: #E8713A;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--cream);
+      color: #333;
+      line-height: 1.7;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--navy), #243756);
+      color: white;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    header h1 span { color: var(--coral); }
+    header p { color: rgba(255,255,255,0.7); font-size: 1.1rem; }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    nav.toc {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    nav.toc h2 { color: var(--navy); margin-bottom: 1rem; font-size: 1.3rem; }
+    nav.toc ol { padding-left: 1.5rem; }
+    nav.toc li { margin-bottom: 0.4rem; }
+    nav.toc a { color: var(--green); text-decoration: none; }
+    nav.toc a:hover { text-decoration: underline; }
+
+    section {
+      background: white;
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+
+    h2 {
+      color: var(--navy);
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 3px solid var(--green-light);
+    }
+
+    h3 {
+      color: var(--green);
+      font-size: 1.15rem;
+      margin: 1.5rem 0 0.5rem;
+    }
+
+    h4 {
+      color: var(--navy);
+      font-size: 1rem;
+      margin: 1rem 0 0.5rem;
+    }
+
+    p { margin-bottom: 0.8rem; }
+
+    code {
+      background: #f0ede8;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      font-family: 'Consolas', 'Fira Code', monospace;
+      color: var(--coral);
+    }
+
+    pre {
+      background: var(--navy);
+      color: #e0e0e0;
+      padding: 1.2rem;
+      border-radius: 12px;
+      overflow-x: auto;
+      margin: 1rem 0;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+    }
+
+    .highlight { color: var(--coral); }
+    .highlight-green { color: var(--green-light); }
+    .highlight-orange { color: var(--orange); }
+
+    .file-path {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--green), var(--navy));
+      color: white;
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: monospace;
+      margin-bottom: 0.5rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 6px;
+      margin-bottom: 4px;
+    }
+
+    .badge-new { background: #dcfce7; color: #166534; }
+    .badge-modified { background: #fef9c3; color: #854d0e; }
+    .badge-security { background: #fee2e2; color: #991b1b; }
+
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.3rem; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    th {
+      background: var(--navy);
+      color: white;
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) { background: #f9fafb; }
+
+    .concept-box {
+      background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+      border-left: 4px solid var(--green);
+      padding: 1rem 1.2rem;
+      border-radius: 0 12px 12px 0;
+      margin: 1rem 0;
+    }
+
+    .warning-box {
+      background: linear-gradient(135deg, #fef2f2, #fee2e2);
+      border-left: 4px solid var(--coral);
+      padding: 1rem 1.2rem;
+      border-radius: 0 12px 12px 0;
+      margin: 1rem 0;
+    }
+
+    .info-box {
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      border-left: 4px solid #3b82f6;
+      padding: 1rem 1.2rem;
+      border-radius: 0 12px 12px 0;
+      margin: 1rem 0;
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--green);
+      color: white;
+      font-weight: bold;
+      font-size: 0.9rem;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: #f9fafb;
+      border-radius: 12px;
+    }
+
+    .step-content { flex: 1; }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: #888;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Food<span>Synk</span> - Primer CRUD de Recetas</h1>
+  <p>Documentacion paso a paso: Editar y Eliminar recetas + Rediseno del Login</p>
+</header>
+
+<div class="container">
+
+  <!-- INDICE -->
+  <nav class="toc">
+    <h2>Indice de contenidos</h2>
+    <ol>
+      <li><a href="#resumen">Resumen de los cambios</a></li>
+      <li><a href="#paso1">Paso 1: Componente ConfirmModal (modal de confirmacion)</a></li>
+      <li><a href="#paso2">Paso 2: RecipeCard con botones de accion</a></li>
+      <li><a href="#paso3">Paso 3: RecipeGrid actualizado</a></li>
+      <li><a href="#paso4">Paso 4: Pagina EditRecipe (formulario de edicion)</a></li>
+      <li><a href="#paso5">Paso 5: MyRecipes con funcionalidad CRUD</a></li>
+      <li><a href="#paso6">Paso 6: Login con colores de marca</a></li>
+      <li><a href="#paso7">Paso 7: Nueva ruta en main.jsx</a></li>
+      <li><a href="#paso8">Paso 8: Animacion CSS para el modal</a></li>
+      <li><a href="#seguridad">Medidas de seguridad aplicadas</a></li>
+      <li><a href="#endpoints">Endpoints API utilizados</a></li>
+      <li><a href="#archivos">Resumen de archivos</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1. RESUMEN -->
+  <section id="resumen">
+    <h2>1. Resumen de los cambios</h2>
+    <p>En esta iteracion se ha implementado el <strong>primer CRUD de recetas</strong> en el frontend, anadiendo las operaciones de <strong>Editar (Update)</strong> y <strong>Eliminar (Delete)</strong> a la pagina "Mis Recetas". Adicionalmente, se ha actualizado el diseno del Login para usar los colores de marca de FoodSynk.</p>
+
+    <h3>Funcionalidades anadidas:</h3>
+    <ul>
+      <li><strong>Editar receta:</strong> Boton con icono de lapiz en cada tarjeta de receta. Al pulsarlo, se abre un formulario con los datos actuales de la receta pre-rellenados. El usuario puede modificar los campos que desee y guardar.</li>
+      <li><strong>Eliminar receta:</strong> Boton con icono de papelera en cada tarjeta. Al pulsarlo, aparece un modal de confirmacion que pregunta si realmente quiere eliminar la receta. Solo si confirma se envia la peticion DELETE.</li>
+      <li><strong>Imagen placeholder:</strong> Las recetas sin imagen o con imagen que no carga muestran una imagen placeholder por defecto.</li>
+      <li><strong>Login rediseñado:</strong> Los colores del formulario de login ahora usan los colores definidos en la marca (navy, green, coral, cream) en lugar de colores personalizados.</li>
+    </ul>
+
+    <h3>Principios seguidos:</h3>
+    <ul>
+      <li>Componentes reutilizables y escalables</li>
+      <li>Seguridad basada en OWASP Top 10 (segun documento Antigravity)</li>
+      <li>React + Tailwind CSS</li>
+      <li>Colores de marca de FoodSynk</li>
+      <li>Animaciones hover en los botones de accion</li>
+    </ul>
+  </section>
+
+  <!-- PASO 1 -->
+  <section id="paso1">
+    <h2>2. Paso 1: Componente ConfirmModal</h2>
+    <span class="file-path">src/components/ConfirmModal.jsx</span>
+    <span class="badge badge-new">Nuevo</span>
+
+    <div class="step">
+      <span class="step-number">1</span>
+      <div class="step-content">
+        <h4>¿Que es y para que sirve?</h4>
+        <p>Es un <strong>componente reutilizable</strong> que muestra un dialogo modal de confirmacion. Se usa para la eliminacion de recetas, pero puede reutilizarse en cualquier otra accion destructiva del proyecto.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="step-number">2</span>
+      <div class="step-content">
+        <h4>¿Como funciona?</h4>
+        <p>Recibe las siguientes <strong>props</strong>:</p>
+        <ul>
+          <li><code>open</code> - Booleano que controla si el modal se muestra o no</li>
+          <li><code>title</code> - Titulo del modal (ej: "Eliminar receta")</li>
+          <li><code>message</code> - Mensaje explicativo (ej: "¿Estas seguro?")</li>
+          <li><code>confirmText</code> / <code>cancelText</code> - Texto de los botones</li>
+          <li><code>onConfirm</code> - Funcion que se ejecuta al confirmar</li>
+          <li><code>onCancel</code> - Funcion que se ejecuta al cancelar</li>
+          <li><code>loading</code> - Desactiva los botones mientras se procesa</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="step-number">3</span>
+      <div class="step-content">
+        <h4>Estructura visual</h4>
+        <ul>
+          <li><strong>Overlay</strong>: fondo oscuro semitransparente con desenfoque (<code>backdrop-blur-sm</code>)</li>
+          <li><strong>Icono de advertencia</strong>: triangulo naranja/rojo centrado</li>
+          <li><strong>Titulo y mensaje</strong>: centrados</li>
+          <li><strong>Dos botones</strong>: "Cancelar" (gris) y "Eliminar" (rojo coral)</li>
+          <li><strong>Animacion</strong>: el modal aparece con <code>animate-fade-in</code> (escala + opacidad)</li>
+        </ul>
+      </div>
+    </div>
+
+    <pre><code><span class="highlight-green">// Uso desde MyRecipes.jsx:</span>
+&lt;ConfirmModal
+  open={!!deleteTarget}
+  title="Eliminar receta"
+  message="¿Estas seguro de que quieres eliminar esta receta?"
+  onConfirm={handleDeleteConfirm}
+  onCancel={() => setDeleteTarget(null)}
+  loading={deleting}
+/&gt;</code></pre>
+  </section>
+
+  <!-- PASO 2 -->
+  <section id="paso2">
+    <h2>3. Paso 2: RecipeCard con botones de accion</h2>
+    <span class="file-path">src/components/RecipeCard.jsx</span>
+    <span class="badge badge-modified">Modificado</span>
+
+    <div class="step">
+      <span class="step-number">1</span>
+      <div class="step-content">
+        <h4>Nuevas props opcionales</h4>
+        <p>Se han anadido tres props opcionales al componente:</p>
+        <ul>
+          <li><code>showActions</code> (boolean) - Si es <code>true</code>, muestra los botones de editar y eliminar</li>
+          <li><code>onEdit</code> (function) - Callback que se ejecuta al pulsar editar</li>
+          <li><code>onDelete</code> (function) - Callback que se ejecuta al pulsar eliminar</li>
+        </ul>
+        <p>Esto permite que el mismo componente funcione sin botones en Home y con botones en Mis Recetas.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="step-number">2</span>
+      <div class="step-content">
+        <h4>Botones de accion con animacion hover</h4>
+        <p>Los botones aparecen en la esquina superior derecha de la tarjeta. Cada boton tiene:</p>
+        <ul>
+          <li>Fondo semitransparente con <code>backdrop-blur-sm</code></li>
+          <li>Al pasar el raton: cambia de color de fondo, texto se vuelve blanco, se escala al 110% y aumenta la sombra</li>
+          <li>El boton de editar se pone verde (<code>bg-brand-green</code>) al hacer hover</li>
+          <li>El boton de eliminar se pone rojo coral (<code>bg-brand-coral</code>) al hacer hover</li>
+          <li><code>e.stopPropagation()</code> evita que el clic en el boton navegue al detalle de la receta</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="step-number">3</span>
+      <div class="step-content">
+        <h4>Imagen placeholder</h4>
+        <p>Se ha anadido un sistema de imagen placeholder para recetas sin foto:</p>
+        <ul>
+          <li>Si <code>recipe.foto</code> es falsy (null, undefined, ""), se usa una imagen SVG inline como placeholder</li>
+          <li>Si la imagen existe pero falla al cargar (URL rota), el evento <code>onError</code> reemplaza la imagen por el placeholder</li>
+          <li>El placeholder muestra un icono de plato y el texto "Sin imagen"</li>
+        </ul>
+      </div>
+    </div>
+
+    <pre><code><span class="highlight-green">// Clases Tailwind de los botones de accion:</span>
+"rounded-lg bg-white/90 backdrop-blur-sm p-2 shadow-md
+ border border-gray-200 text-brand-navy
+ <span class="highlight">hover:bg-brand-green hover:text-white
+ hover:scale-110 hover:shadow-lg</span>
+ transition-all duration-200"</code></pre>
+  </section>
+
+  <!-- PASO 3 -->
+  <section id="paso3">
+    <h2>4. Paso 3: RecipeGrid actualizado</h2>
+    <span class="file-path">src/components/RecipeGrid.jsx</span>
+    <span class="badge badge-modified">Modificado</span>
+
+    <div class="step">
+      <span class="step-number">1</span>
+      <div class="step-content">
+        <h4>Nuevas props de paso (passthrough)</h4>
+        <p>RecipeGrid ahora acepta y reenvía las props <code>showActions</code>, <code>onEdit</code> y <code>onDelete</code> a cada RecipeCard. Esto permite que el componente padre (MyRecipes o Home) controle si se muestran las acciones.</p>
+      </div>
+    </div>
+
+    <pre><code>&lt;RecipeGrid
+  recipes={recipes}
+  <span class="highlight">showActions</span>             <span class="highlight-green">// Activa los botones</span>
+  <span class="highlight">onEdit</span>={handleEdit}      <span class="highlight-green">// Funcion para editar</span>
+  <span class="highlight">onDelete</span>={handleDelete}  <span class="highlight-green">// Funcion para eliminar</span>
+/&gt;</code></pre>
+  </section>
+
+  <!-- PASO 4 -->
+  <section id="paso4">
+    <h2>5. Paso 4: Pagina EditRecipe</h2>
+    <span class="file-path">src/pages/EditRecipe.jsx</span>
+    <span class="badge badge-new">Nuevo</span>
+
+    <div class="step">
+      <span class="step-number">1</span>
+      <div class="step-content">
+        <h4>Carga de datos</h4>
+        <p>Al montarse, la pagina hace un <code>GET /api/recipes/:id</code> para obtener los datos actuales de la receta y rellena el formulario con ellos. El usuario ve los valores actuales y puede modificar los que desee.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="step-number">2</span>
+      <div class="step-content">
+        <h4>Campos del formulario</h4>
+        <ul>
+          <li><strong>Titulo</strong> - Texto, maximo 150 caracteres. Muestra contador de caracteres.</li>
+          <li><strong>Tiempo de preparacion</strong> - Texto libre, maximo 50 caracteres.</li>
+          <li><strong>URL de imagen</strong> - Se valida que empiece por http:// o https:// (seguridad contra javascript: y data:).</li>
+          <li><strong>Pasos de preparacion</strong> - Textarea, maximo 5000 caracteres. Muestra contador.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="step-number">3</span>
+      <div class="step-content">
+        <h4>Regla de validacion principal</h4>
+        <p>El formulario <strong>permite enviar campos vacios</strong> (por ejemplo, quitar la imagen), pero <strong>no permite que TODOS los campos esten vacios</strong>. Si todos estan vacios, aparece un mensaje de error y el boton se desactiva.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="step-number">4</span>
+      <div class="step-content">
+        <h4>Deteccion de cambios</h4>
+        <p>Se guardan los valores originales de la receta. El boton "Guardar" solo se activa si hay al menos un cambio respecto a los valores originales. Esto evita peticiones innecesarias al servidor.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="step-number">5</span>
+      <div class="step-content">
+        <h4>Envio</h4>
+        <p>Al guardar, se envia un <code>PUT /api/recipes/:id</code> con los datos. Si el servidor responde con exito, se muestra un mensaje verde y se redirige a Mis Recetas tras 1.2 segundos. Los errores se manejan con mensajes genericos segun el codigo HTTP (403, 404, 422, 429).</p>
+      </div>
+    </div>
+
+    <div class="concept-box">
+      <strong>Concepto clave - Sanitizacion:</strong> La funcion <code>sanitize()</code> elimina espacios en blanco excesivos (3+ seguidos) y quita espacios al inicio. La URL de la foto se valida con <code>new URL()</code> para asegurar que solo se aceptan URLs http/https, evitando inyecciones con <code>javascript:</code> o <code>data:</code>.
+    </div>
+  </section>
+
+  <!-- PASO 5 -->
+  <section id="paso5">
+    <h2>6. Paso 5: MyRecipes con funcionalidad CRUD</h2>
+    <span class="file-path">src/pages/MyRecipes.jsx</span>
+    <span class="badge badge-modified">Modificado</span>
+
+    <div class="step">
+      <span class="step-number">1</span>
+      <div class="step-content">
+        <h4>Estado para eliminacion</h4>
+        <p>Se anadieron dos nuevos estados:</p>
+        <ul>
+          <li><code>deleteTarget</code> - Almacena la receta que el usuario quiere eliminar (o null si no hay ninguna)</li>
+          <li><code>deleting</code> - Booleano que indica si la peticion DELETE esta en curso</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="step-number">2</span>
+      <div class="step-content">
+        <h4>Flujo de edicion</h4>
+        <p>Cuando el usuario pulsa el boton de editar en una tarjeta, se ejecuta <code>handleEdit(recipe)</code> que navega a <code>/my-recipes/:id/edit</code>. La pagina EditRecipe carga y muestra el formulario.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="step-number">3</span>
+      <div class="step-content">
+        <h4>Flujo de eliminacion</h4>
+        <ol>
+          <li>El usuario pulsa el boton de eliminar en una tarjeta</li>
+          <li>Se ejecuta <code>handleDeleteRequest(recipe)</code> que guarda la receta en <code>deleteTarget</code></li>
+          <li>Como <code>deleteTarget</code> no es null, el <code>ConfirmModal</code> se abre automaticamente</li>
+          <li>Si el usuario pulsa "Cancelar", se pone <code>deleteTarget</code> a null y el modal se cierra</li>
+          <li>Si el usuario pulsa "Eliminar", se ejecuta <code>handleDeleteConfirm()</code>:
+            <ul>
+              <li>Envia <code>DELETE /api/recipes/:id</code></li>
+              <li>Si tiene exito, elimina la receta del array local con <code>filter()</code></li>
+              <li>Si da error 403, muestra mensaje de permisos</li>
+              <li>Si da error 404, asume que ya fue eliminada y la quita del listado</li>
+            </ul>
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="step-number">4</span>
+      <div class="step-content">
+        <h4>RecipeGrid con acciones activadas</h4>
+        <p>Se pasa <code>showActions</code> al RecipeGrid para que cada tarjeta muestre los botones de editar y eliminar. Los callbacks <code>onEdit</code> y <code>onDelete</code> se conectan a las funciones de este componente.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PASO 6 -->
+  <section id="paso6">
+    <h2>7. Paso 6: Login con colores de marca</h2>
+    <span class="file-path">src/pages/Login.jsx</span>
+    <span class="badge badge-modified">Modificado</span>
+
+    <div class="step">
+      <span class="step-number">1</span>
+      <div class="step-content">
+        <h4>Cambios de colores</h4>
+        <p>Se han reemplazado todos los colores personalizados (hardcoded) por los colores de la marca definidos en <code>tailwind.config.cjs</code>:</p>
+        <table>
+          <tr><th>Antes (hardcoded)</th><th>Despues (brand)</th><th>Uso</th></tr>
+          <tr><td><code>bg-[#f6f2ea]</code></td><td><code>bg-brand-cream</code></td><td>Fondo de la pagina</td></tr>
+          <tr><td><code>text-[#3f2f24]</code></td><td><code>text-brand-navy</code></td><td>Texto principal</td></tr>
+          <tr><td><code>text-[#5f7d5f]</code></td><td><code>text-brand-green</code></td><td>Acentos verdes</td></tr>
+          <tr><td><code>bg-[#5f7d5f]</code></td><td><code>bg-brand-green</code></td><td>Boton principal</td></tr>
+          <tr><td><code>text-[#8b5a44]</code></td><td><code>text-brand-coral</code></td><td>Errores de validacion</td></tr>
+          <tr><td><code>border-[#d7ccb8]</code></td><td><code>border-brand-green-light/50</code></td><td>Bordes</td></tr>
+          <tr><td><code>bg-[#fffaf2]</code></td><td><code>bg-white</code></td><td>Fondo del formulario</td></tr>
+          <tr><td><code>text-[#6b5a4b]</code></td><td><code>text-gray-500</code></td><td>Textos secundarios</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="step-number">2</span>
+      <div class="step-content">
+        <h4>Beneficios del cambio</h4>
+        <ul>
+          <li><strong>Consistencia:</strong> El login ahora usa exactamente los mismos colores que el resto de la app</li>
+          <li><strong>Mantenibilidad:</strong> Si se cambian los colores de marca en <code>tailwind.config.cjs</code>, el login se actualiza automaticamente</li>
+          <li><strong>Legibilidad:</strong> <code>text-brand-green</code> es mas facil de leer que <code>text-[#5f7d5f]</code></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- PASO 7 -->
+  <section id="paso7">
+    <h2>8. Paso 7: Nueva ruta en main.jsx</h2>
+    <span class="file-path">src/main.jsx</span>
+    <span class="badge badge-modified">Modificado</span>
+
+    <div class="step">
+      <span class="step-number">1</span>
+      <div class="step-content">
+        <h4>Ruta anadida</h4>
+        <p>Se ha anadido la ruta <code>/my-recipes/:id/edit</code> dentro del bloque de rutas protegidas:</p>
+        <pre><code>&lt;Route path="/my-recipes/:id/edit" element={&lt;EditRecipe /&gt;} /&gt;</code></pre>
+        <p>Esta ruta es protegida (requiere token) y usa el ProtectedLayout (con Navbar).</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <span class="step-number">2</span>
+      <div class="step-content">
+        <h4>Estructura completa de rutas</h4>
+        <pre><code>/ ........................... Login (publica)
+/register .................. Registro (publica)
+/home ...................... Todas las recetas (protegida)
+/my-recipes ................ Mis recetas (protegida)
+<span class="highlight">/my-recipes/:id/edit ....... Editar receta (protegida) [NUEVA]</span>
+/recipes/:id ............... Detalle de receta (protegida)</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- PASO 8 -->
+  <section id="paso8">
+    <h2>9. Paso 8: Animacion CSS para el modal</h2>
+    <span class="file-path">src/index.css</span>
+    <span class="badge badge-modified">Modificado</span>
+
+    <div class="step">
+      <span class="step-number">1</span>
+      <div class="step-content">
+        <h4>Animacion fade-in</h4>
+        <p>Se ha anadido una animacion CSS personalizada que usa el modal de confirmacion:</p>
+        <pre><code>@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}</code></pre>
+        <p>El modal aparece con un efecto suave de desvanecimiento y escala, durando 0.2 segundos.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEGURIDAD -->
+  <section id="seguridad">
+    <h2>10. Medidas de seguridad aplicadas</h2>
+    <p>Siguiendo las recomendaciones del documento <strong>Antigravity</strong> y los principios de OWASP Top 10:</p>
+
+    <h3>A01 - Control de acceso</h3>
+    <ul>
+      <li>La ruta <code>/my-recipes/:id/edit</code> esta protegida por <code>ProtectedRoute</code></li>
+      <li>La peticion PUT incluye automaticamente el Bearer token</li>
+      <li>El backend verifica que la receta pertenece al usuario (403 si no)</li>
+    </ul>
+
+    <h3>A03 - Inyeccion</h3>
+    <ul>
+      <li><strong>Sanitizacion de texto:</strong> La funcion <code>sanitize()</code> elimina espacios excesivos</li>
+      <li><strong>Validacion de URL:</strong> Solo se aceptan URLs con protocolo <code>http:</code> o <code>https:</code>, bloqueando <code>javascript:</code> y <code>data:</code></li>
+      <li><strong>maxLength en todos los campos:</strong> Titulo (150), Tiempo (50), URL (500), Pasos (5000)</li>
+      <li><strong>No se usa dangerouslySetInnerHTML:</strong> React escapa automaticamente todo el HTML</li>
+      <li><strong>Eliminacion de espacios en la URL:</strong> <code>replace(/\s+/g, "")</code> previene inyecciones con espacios</li>
+    </ul>
+
+    <h3>A04 - Diseno inseguro</h3>
+    <ul>
+      <li><strong>Confirmacion de eliminacion:</strong> El usuario debe confirmar explicitamente antes de borrar</li>
+      <li><strong>Botones desactivados:</strong> No se puede enviar el formulario si todos los campos estan vacios</li>
+      <li><strong>Deteccion de cambios:</strong> No se envia la peticion si no hay cambios reales</li>
+    </ul>
+
+    <h3>A05 - Configuracion insegura</h3>
+    <ul>
+      <li><strong>No hay console.error ni console.log:</strong> No se expone informacion en la consola</li>
+      <li><strong>Mensajes de error genericos:</strong> Los errores HTTP se traducen a mensajes amigables sin revelar estructura interna</li>
+    </ul>
+
+    <h3>A07 - Autenticacion</h3>
+    <ul>
+      <li>Todas las peticiones de modificacion (PUT, DELETE) llevan el token Bearer automaticamente</li>
+      <li>Se manejan los errores 403 (sin permisos) y 429 (rate limiting)</li>
+    </ul>
+
+    <div class="warning-box">
+      <strong>Importante:</strong> La seguridad del frontend es solo una capa. Las validaciones reales de permisos, propiedad de recetas y sanitizacion de datos se hacen en el backend (Laravel). El frontend previene errores del usuario y mejora la experiencia, pero no sustituye la validacion del servidor.
+    </div>
+  </section>
+
+  <!-- ENDPOINTS -->
+  <section id="endpoints">
+    <h2>11. Endpoints API utilizados</h2>
+    <table>
+      <tr><th>Metodo</th><th>Endpoint</th><th>Descripcion</th><th>Usado en</th></tr>
+      <tr><td>GET</td><td>/api/my-recipes</td><td>Obtener recetas del usuario</td><td>MyRecipes.jsx</td></tr>
+      <tr><td>GET</td><td>/api/recipes/:id</td><td>Obtener detalle de una receta</td><td>EditRecipe.jsx</td></tr>
+      <tr><td><span class="highlight">PUT</span></td><td><span class="highlight">/api/recipes/:id</span></td><td><span class="highlight">Actualizar una receta</span></td><td><span class="highlight">EditRecipe.jsx [NUEVO]</span></td></tr>
+      <tr><td><span class="highlight">DELETE</span></td><td><span class="highlight">/api/recipes/:id</span></td><td><span class="highlight">Eliminar una receta</span></td><td><span class="highlight">MyRecipes.jsx [NUEVO]</span></td></tr>
+    </table>
+  </section>
+
+  <!-- ARCHIVOS -->
+  <section id="archivos">
+    <h2>12. Resumen de archivos</h2>
+
+    <h3>Archivos nuevos</h3>
+    <table>
+      <tr><th>Archivo</th><th>Descripcion</th></tr>
+      <tr>
+        <td><code>src/components/ConfirmModal.jsx</code></td>
+        <td>Modal reutilizable de confirmacion con overlay, icono de advertencia y botones. Usa animacion fade-in.</td>
+      </tr>
+      <tr>
+        <td><code>src/pages/EditRecipe.jsx</code></td>
+        <td>Pagina con formulario de edicion. Carga datos via GET, envia cambios via PUT. Validacion de URL, sanitizacion de texto, deteccion de cambios.</td>
+      </tr>
+    </table>
+
+    <h3>Archivos modificados</h3>
+    <table>
+      <tr><th>Archivo</th><th>Cambios</th></tr>
+      <tr>
+        <td><code>src/components/RecipeCard.jsx</code></td>
+        <td>Anadidos botones de editar/eliminar con animaciones hover. Imagen placeholder con fallback onError.</td>
+      </tr>
+      <tr>
+        <td><code>src/components/RecipeGrid.jsx</code></td>
+        <td>Reenvia props showActions, onEdit, onDelete a cada RecipeCard.</td>
+      </tr>
+      <tr>
+        <td><code>src/pages/MyRecipes.jsx</code></td>
+        <td>Anadida logica de eliminacion con modal de confirmacion y navegacion a edicion. Usa ConfirmModal.</td>
+      </tr>
+      <tr>
+        <td><code>src/pages/Login.jsx</code></td>
+        <td>Colores actualizados de hardcoded a brand colors (brand-navy, brand-green, brand-coral, brand-cream).</td>
+      </tr>
+      <tr>
+        <td><code>src/main.jsx</code></td>
+        <td>Anadido import de EditRecipe y ruta /my-recipes/:id/edit.</td>
+      </tr>
+      <tr>
+        <td><code>src/index.css</code></td>
+        <td>Anadida animacion CSS @keyframes fade-in para el modal.</td>
+      </tr>
+    </table>
+  </section>
+
+</div>
+
+<footer>
+  <p>FoodSynk &mdash; Primer CRUD de Recetas &mdash; Documentacion del desarrollo</p>
+</footer>
+
+</body>
+</html>
