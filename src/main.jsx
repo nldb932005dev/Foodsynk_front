@@ -8,6 +8,7 @@ import Register from "./pages/Register";
 import Home from "./pages/Home";
 import MyRecipes from "./pages/MyRecipes";
 import RecipeDetail from "./pages/RecipeDetail";
+import EditRecipe from "./pages/EditRecipe";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import ProtectedLayout from "./layouts/ProtectedLayout";
 
@@ -23,6 +24,7 @@ function App() {
         <Route element={<ProtectedLayout />}>
           <Route path="/home" element={<Home />} />
           <Route path="/my-recipes" element={<MyRecipes />} />
+          <Route path="/my-recipes/:id/edit" element={<EditRecipe />} />
           <Route path="/recipes/:id" element={<RecipeDetail />} />
         </Route>
       </Route>
