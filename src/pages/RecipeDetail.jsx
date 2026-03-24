@@ -38,7 +38,7 @@ export default function RecipeDetail() {
     return (
       <div className="max-w-2xl mx-auto">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/")}
           className="flex items-center gap-2 text-sm text-brand-green hover:text-brand-green-dark transition-colors mb-6"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -57,7 +57,7 @@ export default function RecipeDetail() {
     <div className="max-w-3xl mx-auto">
       {/* Boton volver */}
       <button
-        onClick={() => navigate(-1)}
+        onClick={() => navigate("/")}
         className="flex items-center gap-2 text-sm text-brand-green hover:text-brand-green-dark transition-colors mb-6"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">

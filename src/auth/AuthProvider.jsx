@@ -6,13 +6,22 @@ export function AuthProvider({ children }) {
  const [token, setToken] = useState(null);
  const [user, setUser] = useState(null);
 
-
+ // Rehidratar token y user desde sessionStorage al montar
  useEffect(() => {
    const savedToken = sessionStorage.getItem("token");
    if (savedToken) setToken(savedToken);
+
+   const savedUser = sessionStorage.getItem("user");
+   if (savedUser) {
+     try {
+       setUser(JSON.parse(savedUser));
+     } catch {
+       sessionStorage.removeItem("user");
+     }
+   }
  }, []);
 
-
+ // Sincronizar token con sessionStorage
  useEffect(() => {
    if (token) {
      sessionStorage.setItem("token", token);
@@ -20,6 +29,15 @@ export function AuthProvider({ children }) {
      sessionStorage.removeItem("token");
    }
  }, [token]);
+
+ // Sincronizar user con sessionStorage
+ useEffect(() => {
+   if (user) {
+     sessionStorage.setItem("user", JSON.stringify(user));
+   } else {
+     sessionStorage.removeItem("user");
+   }
+ }, [user]);
 
 
  const value = useMemo(

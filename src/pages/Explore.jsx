@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+import { useAuth } from "../auth/useAuth";
 import useRecipes from "../hooks/useRecipes";
 import PageHeader from "../components/PageHeader";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -5,14 +7,15 @@ import ErrorMessage from "../components/ErrorMessage";
 import EmptyState from "../components/EmptyState";
 import RecipeGrid from "../components/RecipeGrid";
 
-export default function Home() {
+export default function Explore() {
+  const { token } = useAuth();
   const { recipes, loading, error } = useRecipes();
 
   return (
     <div>
       <PageHeader
-        title="Todas las recetas"
-        subtitle="Explora todas las recetas disponibles"
+        title="Explora recetas"
+        subtitle="Descubre recetas de toda la comunidad"
       />
 
       {loading && <LoadingSpinner />}
@@ -31,6 +34,24 @@ export default function Home() {
 
       {!loading && !error && recipes.length > 0 && (
         <RecipeGrid recipes={recipes} />
+      )}
+
+      {/* CTA de registro — solo si no hay sesion */}
+      {!token && !loading && !error && recipes.length > 0 && (
+        <div className="mt-10 text-center rounded-2xl border border-brand-green-light/50 bg-white p-6">
+          <p className="text-brand-navy font-semibold">
+            Registrate para guardar tus propias recetas
+          </p>
+          <p className="text-sm text-gray-500 mt-1">
+            Crea, organiza y gestiona tus recetas favoritas.
+          </p>
+          <Link
+            to="/register"
+            className="inline-block mt-4 rounded-xl bg-brand-green px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-green-dark transition-colors"
+          >
+            Crear cuenta gratis
+          </Link>
+        </div>
       )}
     </div>
   );

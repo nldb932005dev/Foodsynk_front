@@ -5,27 +5,32 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthProvider";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Explore from "./pages/Explore";
 import Home from "./pages/Home";
 import MyRecipes from "./pages/MyRecipes";
 import RecipeDetail from "./pages/RecipeDetail";
 import EditRecipe from "./pages/EditRecipe";
 import ProtectedRoute from "./auth/ProtectedRoute";
-import ProtectedLayout from "./layouts/ProtectedLayout";
+import AppLayout from "./layouts/AppLayout";
 
 function App() {
   return (
     <Routes>
-      {/* Publica */}
-      <Route path="/" element={<Login />} />
+      {/* Auth pages — sin layout, full screen */}
+      <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Protegidas */}
-      <Route element={<ProtectedRoute />}>
-        <Route element={<ProtectedLayout />}>
+      {/* Paginas con shell visual (AppLayout) */}
+      <Route element={<AppLayout />}>
+        {/* Publicas — accesibles sin auth */}
+        <Route path="/" element={<Explore />} />
+        <Route path="/recipes/:id" element={<RecipeDetail />} />
+
+        {/* Protegidas — requieren auth */}
+        <Route element={<ProtectedRoute />}>
           <Route path="/home" element={<Home />} />
           <Route path="/my-recipes" element={<MyRecipes />} />
           <Route path="/my-recipes/:id/edit" element={<EditRecipe />} />
-          <Route path="/recipes/:id" element={<RecipeDetail />} />
         </Route>
       </Route>
     </Routes>
