@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorMessage from "../components/ErrorMessage";
@@ -18,115 +18,85 @@ function isValidUrl(url) {
   }
 }
 
-export default function EditRecipe() {
-  const { id } = useParams();
+export default function CreateRecipe() {
   const navigate = useNavigate();
 
-  const [loading,  setLoading]  = useState(true);
-  const [saving,   setSaving]   = useState(false);
-  const [error,    setError]    = useState("");
-  const [success,  setSuccess]  = useState("");
-
-  // Campos
+  // ── Campos del formulario ────────────────────────────────────────────────
   const [titulo, setTitulo] = useState("");
   const [time,   setTime]   = useState("");
   const [pasos,  setPasos]  = useState("");
   const [foto,   setFoto]   = useState("");
   const [status, setStatus] = useState("draft");
 
-  const [selectedCategories,  setSelectedCategories]  = useState([]);
-  const [selectedIngredients, setSelectedIngredients] = useState([]);
+  const [selectedCategories,  setSelectedCategories]  = useState([]); // [id, ...]
+  const [selectedIngredients, setSelectedIngredients] = useState([]); // [id, ...]
 
-  // Opciones
+  // ── Opciones de selección ───────────────────────────────────────────────
   const [categories,  setCategories]  = useState([]);
   const [ingredients, setIngredients] = useState([]);
+  const [loadingOptions, setLoadingOptions] = useState(true);
+  const [optionsError,   setOptionsError]   = useState("");
 
-  // Búsqueda en listados
+  // ── Búsqueda dentro de los listados ────────────────────────────────────
   const [catSearch, setCatSearch] = useState("");
   const [ingSearch, setIngSearch] = useState("");
 
-  // Original para detectar cambios
-  const [original, setOriginal] = useState({});
-
+  // ── Estado del envío ────────────────────────────────────────────────────
+  const [saving,  setSaving]  = useState(false);
+  const [error,   setError]   = useState("");
   const [touched, setTouched] = useState({});
 
+  // ── Carga de categorías e ingredientes ──────────────────────────────────
   useEffect(() => {
-    async function load() {
+    async function loadOptions() {
       try {
-        setLoading(true);
-        setError("");
-        const [recipeRes, catRes, ingRes] = await Promise.all([
-          api.get(`/recipes/${id}?include=categories,ingredients`),
+        setLoadingOptions(true);
+        const [catRes, ingRes] = await Promise.all([
           api.get("/categories"),
           api.get("/ingredients"),
         ]);
-
-        const recipe = recipeRes.data?.data ?? recipeRes.data;
-
-        const data = {
-          titulo: recipe.titulo  ?? "",
-          time:   recipe.time    ?? "",
-          pasos:  recipe.pasos   ?? "",
-          foto:   recipe.foto    ?? "",
-          status: recipe.status  ?? "draft",
-        };
-
-        setTitulo(data.titulo);
-        setTime(data.time !== "" ? String(data.time) : "");
-        setPasos(data.pasos);
-        setFoto(data.foto);
-        setStatus(data.status);
-        setOriginal(data);
-
-        const currentCatIds = (recipe.categories ?? []).map((c) => c.id);
-        const currentIngIds = (recipe.ingredients ?? []).map((i) => i.id);
-        setSelectedCategories(currentCatIds);
-        setSelectedIngredients(currentIngIds);
-
         setCategories(catRes.data?.data  ?? catRes.data  ?? []);
         setIngredients(ingRes.data?.data ?? ingRes.data  ?? []);
       } catch {
-        setError("No se pudo cargar la receta para editar.");
+        setOptionsError("No se pudieron cargar las categorías e ingredientes.");
       } finally {
-        setLoading(false);
+        setLoadingOptions(false);
       }
     }
-    load();
-  }, [id]);
+    loadOptions();
+  }, []);
 
-  function toggleCategory(catId) {
+  // ── Helpers de selección ────────────────────────────────────────────────
+  function toggleCategory(id) {
     setSelectedCategories((prev) =>
-      prev.includes(catId) ? prev.filter((x) => x !== catId) : [...prev, catId]
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   }
 
-  function toggleIngredient(ingId) {
+  function toggleIngredient(id) {
     setSelectedIngredients((prev) =>
-      prev.includes(ingId) ? prev.filter((x) => x !== ingId) : [...prev, ingId]
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   }
 
-  // Validación
+  // ── Validación ──────────────────────────────────────────────────────────
+  const isPublishing = status === "published";
+
   const fotoError =
     touched.foto && foto && !isValidUrl(foto)
       ? "La URL no es válida (debe empezar por http:// o https://)."
       : "";
 
-  const isPublishing = status === "published";
+  const missingForPublish =
+    isPublishing &&
+    (!titulo.trim() || !time || !pasos.trim() || selectedCategories.length === 0);
 
-  const hasChanges =
-    titulo !== original.titulo ||
-    String(time) !== String(original.time ?? "") ||
-    pasos  !== original.pasos  ||
-    foto   !== original.foto   ||
-    status !== original.status;
+  const canSubmit = !saving && !fotoError && !missingForPublish;
 
-  const canSubmit = !saving && hasChanges && !fotoError;
-
+  // ── Envío ────────────────────────────────────────────────────────────────
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-    setSuccess("");
 
     if (foto && !isValidUrl(foto)) {
       setError("La URL de la foto no es válida.");
@@ -135,22 +105,20 @@ export default function EditRecipe() {
 
     setSaving(true);
     try {
-      await api.put(`/recipes/${id}`, {
+      await api.post("/recipes", {
         titulo:       titulo.trim()  || null,
         time:         time ? parseInt(time, 10) : null,
         pasos:        pasos.trim()   || null,
         foto:         foto.trim()    || null,
         status,
         category_ids: selectedCategories,
-        ingredients:  selectedIngredients.map((ingId) => ({ id: ingId })),
+        ingredients:  selectedIngredients.map((id) => ({ id })),
       });
 
-      setSuccess("Receta actualizada correctamente.");
-      setOriginal({ titulo: titulo.trim(), time, pasos: pasos.trim(), foto: foto.trim(), status });
-      setTimeout(() => navigate("/my-recipes"), 1200);
+      navigate("/my-recipes");
     } catch (err) {
-      const httpStatus = err?.response?.status;
-      if (httpStatus === 422) {
+      const status422 = err?.response?.status;
+      if (status422 === 422) {
         const errors = err?.response?.data?.errors;
         if (errors) {
           const first = Object.values(errors)[0];
@@ -158,20 +126,17 @@ export default function EditRecipe() {
         } else {
           setError("Datos incorrectos. Revisa los campos e inténtalo de nuevo.");
         }
-      } else if (httpStatus === 403) {
-        setError("No tienes permiso para editar esta receta.");
-      } else if (httpStatus === 404) {
-        setError("La receta no existe o ha sido eliminada.");
-      } else if (httpStatus === 429) {
+      } else if (status422 === 429) {
         setError("Demasiados intentos. Espera un momento.");
       } else {
-        setError("Error al guardar los cambios. Inténtalo de nuevo más tarde.");
+        setError("Error al guardar la receta. Inténtalo de nuevo.");
       }
     } finally {
       setSaving(false);
     }
   }
 
+  // ── Filtrado de listas ───────────────────────────────────────────────────
   const filteredCats = categories.filter((c) =>
     c.name.toLowerCase().includes(catSearch.toLowerCase())
   );
@@ -179,24 +144,8 @@ export default function EditRecipe() {
     i.nombre.toLowerCase().includes(ingSearch.toLowerCase())
   );
 
-  if (loading) return <LoadingSpinner text="Cargando receta..." />;
-
-  if (error && !titulo && !time && !pasos) {
-    return (
-      <div className="max-w-2xl mx-auto">
-        <button
-          onClick={() => navigate("/my-recipes")}
-          className="flex items-center gap-2 text-sm text-brand-green hover:text-brand-green-dark transition-colors mb-6"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-          </svg>
-          Volver a Mis Recetas
-        </button>
-        <ErrorMessage message={error} />
-      </div>
-    );
-  }
+  // ── Render ───────────────────────────────────────────────────────────────
+  if (loadingOptions) return <LoadingSpinner text="Cargando opciones..." />;
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -216,45 +165,18 @@ export default function EditRecipe() {
         <div className="flex items-center gap-3 mb-6">
           <div className="h-10 w-10 rounded-xl bg-brand-green/10 flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" height="22px" viewBox="0 -960 960 960" width="22px" fill="#2D6A4F">
-              <path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h357l-80 80H200v560h560v-278l80-80v358q0 33-23.5 56.5T760-120H200Zm280-360ZM360-360v-170l367-367q12-12 27-18t30-6q16 0 30.5 6t26.5 18l56 57q11 12 17 26.5t6 29.5q0 15-5.5 29.5T897-728L530-360H360Zm481-424-56-56 56 56ZM440-440h56l232-232-28-28-29-28-231 231v57Zm260-260-29-28 29 28 28 28-28-28Z" />
+              <path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z" />
             </svg>
           </div>
           <div>
-            <h1 className="text-xl font-bold text-brand-navy">Editar receta</h1>
-            <p className="text-sm text-gray-500">Modifica los campos que quieras actualizar</p>
+            <h1 className="text-xl font-bold text-brand-navy">Nueva receta</h1>
+            <p className="text-sm text-gray-500">Rellena los campos y guarda o publica</p>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Estado */}
-          <div>
-            <span className="text-sm font-medium text-brand-navy block mb-1.5">Estado</span>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setStatus("draft")}
-                className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
-                  status === "draft"
-                    ? "bg-brand-navy text-white border-brand-navy"
-                    : "border-gray-200 text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                Borrador
-              </button>
-              <button
-                type="button"
-                onClick={() => setStatus("published")}
-                className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-medium transition-colors ${
-                  status === "published"
-                    ? "bg-brand-green text-white border-brand-green"
-                    : "border-gray-200 text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                Publicada
-              </button>
-            </div>
-          </div>
+        {optionsError && <ErrorMessage message={optionsError} />}
 
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Título */}
           <label className="block">
             <span className="text-sm font-medium text-brand-navy">
@@ -274,7 +196,7 @@ export default function EditRecipe() {
             </span>
           </label>
 
-          {/* Tiempo */}
+          {/* Tiempo (minutos) */}
           <label className="block">
             <span className="text-sm font-medium text-brand-navy">
               Tiempo de preparación (minutos) {isPublishing && <span className="text-brand-coral">*</span>}
@@ -400,13 +322,14 @@ export default function EditRecipe() {
             </div>
           </div>
 
-          {/* Mensajes */}
-          {error   && <ErrorMessage message={error} />}
-          {success && (
-            <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-              {success}
-            </div>
+          {/* Aviso si falta algo para publicar */}
+          {isPublishing && missingForPublish && (
+            <p className="text-xs text-brand-coral">
+              Para publicar necesitas: título, tiempo, pasos y al menos una categoría.
+            </p>
           )}
+
+          {error && <ErrorMessage message={error} />}
 
           {/* Botones */}
           <div className="flex gap-3 pt-2">
@@ -419,10 +342,19 @@ export default function EditRecipe() {
             </button>
             <button
               type="submit"
+              disabled={saving || fotoError}
+              onClick={() => setStatus("draft")}
+              className="flex-1 rounded-xl border border-brand-green px-4 py-3 text-sm font-semibold text-brand-green hover:bg-brand-green/5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {saving && status === "draft" ? "Guardando..." : "Guardar borrador"}
+            </button>
+            <button
+              type="submit"
               disabled={!canSubmit}
+              onClick={() => setStatus("published")}
               className="flex-1 rounded-xl bg-brand-green px-4 py-3 text-sm font-semibold text-white hover:bg-brand-green-dark transition-colors disabled:cursor-not-allowed disabled:bg-gray-300"
             >
-              {saving ? "Guardando..." : "Guardar cambios"}
+              {saving && status === "published" ? "Publicando..." : "Publicar"}
             </button>
           </div>
         </form>

@@ -70,10 +70,21 @@ export default function MyRecipes() {
 
   return (
     <div>
-      <PageHeader
-        title="Mis Recetas"
-        subtitle="Recetas creadas por ti"
-      />
+      <div className="flex items-center justify-between mb-6">
+        <PageHeader
+          title="Mis Recetas"
+          subtitle="Recetas creadas por ti"
+        />
+        <button
+          onClick={() => navigate("/my-recipes/create")}
+          className="flex items-center gap-2 rounded-xl bg-brand-green px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-green-dark transition-colors shrink-0"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          Nueva receta
+        </button>
+      </div>
 
       {loading && <LoadingSpinner />}
       {!loading && error && <ErrorMessage message={error} />}

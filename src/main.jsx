@@ -10,6 +10,7 @@ import Home from "./pages/Home";
 import MyRecipes from "./pages/MyRecipes";
 import RecipeDetail from "./pages/RecipeDetail";
 import EditRecipe from "./pages/EditRecipe";
+import CreateRecipe from "./pages/CreateRecipe";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import AppLayout from "./layouts/AppLayout";
 
@@ -30,6 +31,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/home" element={<Home />} />
           <Route path="/my-recipes" element={<MyRecipes />} />
+          <Route path="/my-recipes/create" element={<CreateRecipe />} />
           <Route path="/my-recipes/:id/edit" element={<EditRecipe />} />
         </Route>
       </Route>

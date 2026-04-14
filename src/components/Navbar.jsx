@@ -119,6 +119,20 @@ export default function Navbar({ isAuthenticated = false, user = null, onLogout 
               </svg>
               Mis Recetas
             </button>
+
+            <button
+              onClick={() => navigateTo("/my-recipes/create")}
+              className={`w-full flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                isActive("/my-recipes/create")
+                  ? "bg-brand-green text-white"
+                  : "text-white/70 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Nueva Receta
+            </button>
           </nav>
 
           {/* Zona de usuario + cerrar sesion en sidebar (parte inferior) */}
