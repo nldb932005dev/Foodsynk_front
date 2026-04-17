@@ -40,6 +40,22 @@ export default function MyRecipes() {
     navigate(`/my-recipes/${recipe.id}/edit`);
   }
 
+  async function handlePublish(recipe) {
+    try {
+      await api.patch(`/recipes/${recipe.id}`, { status: "published" });
+      setRecipes((prev) =>
+        prev.map((r) => (r.id === recipe.id ? { ...r, status: "published" } : r))
+      );
+    } catch (err) {
+      const status = err?.response?.status;
+      if (status === 422) {
+        setError("Esta receta necesita más información antes de publicarse (título, pasos...).");
+      } else {
+        setError("No se pudo publicar la receta. Inténtalo de nuevo.");
+      }
+    }
+  }
+
   function handleDeleteRequest(recipe) {
     setDeleteTarget(recipe);
   }
@@ -107,6 +123,7 @@ export default function MyRecipes() {
           showActions
           onEdit={handleEdit}
           onDelete={handleDeleteRequest}
+          onPublish={handlePublish}
         />
       )}
 

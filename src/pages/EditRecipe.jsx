@@ -121,7 +121,15 @@ export default function EditRecipe() {
     foto   !== original.foto   ||
     status !== original.status;
 
-  const canSubmit = !saving && hasChanges && !fotoError;
+  const publishErrors = isPublishing ? [
+    ...(!titulo.trim()                   ? ["El título es obligatorio."]                  : []),
+    ...(!pasos.trim()                    ? ["Los pasos de preparación son obligatorios."] : []),
+    ...(!time || parseInt(time, 10) <= 0 ? ["El tiempo de preparación es obligatorio."]  : []),
+    ...(selectedCategories.length === 0  ? ["Añade al menos una categoría."]              : []),
+  ] : [];
+
+  const missingForPublish = publishErrors.length > 0;
+  const canSubmit = !saving && hasChanges && !fotoError && !missingForPublish;
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -335,14 +343,12 @@ export default function EditRecipe() {
             <span className="text-sm font-medium text-brand-navy">
               Categorías {isPublishing && <span className="text-brand-coral">*</span>}
             </span>
-            {selectedCategories.length > 0 && (
-              <span className="ml-2 text-xs text-brand-green font-medium">
-                {selectedCategories.length} seleccionada{selectedCategories.length !== 1 ? "s" : ""}
-              </span>
-            )}
+            <p className="text-xs text-gray-400 mt-0.5 mb-1.5">
+              Opcional si guardas como borrador · Obligatoria si publicas (mínimo 1)
+            </p>
             <input
               type="text"
-              className="mt-1.5 w-full rounded-xl border border-gray-200 bg-brand-cream/50 px-3 py-2 text-sm outline-none focus:border-brand-green focus:ring-2 focus:ring-brand-green/20"
+              className="w-full rounded-xl border border-gray-200 bg-brand-cream/50 px-3 py-2 text-sm outline-none focus:border-brand-green focus:ring-2 focus:ring-brand-green/20"
               placeholder="Buscar categoría..."
               value={catSearch}
               onChange={(e) => setCatSearch(e.target.value)}
@@ -364,19 +370,28 @@ export default function EditRecipe() {
                 ))
               )}
             </div>
+            {selectedCategories.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {selectedCategories.map((id) => {
+                  const cat = categories.find((c) => c.id === id);
+                  return cat ? (
+                    <span key={id} className="flex items-center gap-1 bg-brand-green/10 text-brand-green text-xs px-2.5 py-1 rounded-full font-medium">
+                      {cat.name}
+                      <button type="button" onClick={() => toggleCategory(id)} aria-label={`Quitar ${cat.name}`} className="ml-0.5 hover:text-brand-green-dark font-bold leading-none">×</button>
+                    </span>
+                  ) : null;
+                })}
+              </div>
+            )}
           </div>
 
           {/* Ingredientes */}
           <div>
             <span className="text-sm font-medium text-brand-navy">Ingredientes</span>
-            {selectedIngredients.length > 0 && (
-              <span className="ml-2 text-xs text-brand-green font-medium">
-                {selectedIngredients.length} seleccionado{selectedIngredients.length !== 1 ? "s" : ""}
-              </span>
-            )}
+            <p className="text-xs text-gray-400 mt-0.5 mb-1.5">Opcional</p>
             <input
               type="text"
-              className="mt-1.5 w-full rounded-xl border border-gray-200 bg-brand-cream/50 px-3 py-2 text-sm outline-none focus:border-brand-green focus:ring-2 focus:ring-brand-green/20"
+              className="w-full rounded-xl border border-gray-200 bg-brand-cream/50 px-3 py-2 text-sm outline-none focus:border-brand-green focus:ring-2 focus:ring-brand-green/20"
               placeholder="Buscar ingrediente..."
               value={ingSearch}
               onChange={(e) => setIngSearch(e.target.value)}
@@ -398,7 +413,32 @@ export default function EditRecipe() {
                 ))
               )}
             </div>
+            {selectedIngredients.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {selectedIngredients.map((id) => {
+                  const ing = ingredients.find((i) => i.id === id);
+                  return ing ? (
+                    <span key={id} className="flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-full font-medium">
+                      {ing.nombre}
+                      <button type="button" onClick={() => toggleIngredient(id)} aria-label={`Quitar ${ing.nombre}`} className="ml-0.5 hover:text-gray-800 font-bold leading-none">×</button>
+                    </span>
+                  ) : null;
+                })}
+              </div>
+            )}
           </div>
+
+          {/* Errores de validación para publicar */}
+          {publishErrors.length > 0 && (
+            <div role="alert" className="rounded-xl border border-brand-coral/30 bg-brand-coral/5 px-4 py-3">
+              <p className="text-xs font-semibold text-brand-coral mb-1">Para publicar necesitas:</p>
+              <ul className="list-disc list-inside space-y-0.5">
+                {publishErrors.map((err, i) => (
+                  <li key={i} className="text-xs text-brand-coral">{err}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Mensajes */}
           {error   && <ErrorMessage message={error} />}

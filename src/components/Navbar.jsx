@@ -133,6 +133,34 @@ export default function Navbar({ isAuthenticated = false, user = null, onLogout 
               </svg>
               Nueva Receta
             </button>
+
+            <button
+              onClick={() => navigateTo("/my-favorites")}
+              className={`w-full flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                isActive("/my-favorites")
+                  ? "bg-brand-green text-white"
+                  : "text-white/70 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+              </svg>
+              Mis Favoritos
+            </button>
+
+            <button
+              onClick={() => navigateTo("/my-menus")}
+              className={`w-full flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                location.pathname.startsWith("/my-menus")
+                  ? "bg-brand-green text-white"
+                  : "text-white/70 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+              </svg>
+              Mis Menús
+            </button>
           </nav>
 
           {/* Zona de usuario + cerrar sesion en sidebar (parte inferior) */}

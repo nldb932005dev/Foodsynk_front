@@ -89,7 +89,12 @@ export default function Register() {
 
   return (
     <div className="min-h-screen bg-brand-cream text-brand-navy">
-      <div className="mx-auto grid min-h-screen max-w-6xl grid-cols-1 gap-8 px-6 py-10 md:grid-cols-2 md:items-center">
+      <header className="px-6 py-4">
+        <Link to="/" className="text-xl font-bold tracking-tight text-brand-navy">
+          Food<span className="text-brand-coral">Synk</span>
+        </Link>
+      </header>
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-6 py-10 md:grid-cols-2 md:items-center">
         <div className="order-2 md:order-1">
           <div className="rounded-3xl border border-brand-green-light/50 bg-white p-8 shadow-xl">
             <div className="mb-6">

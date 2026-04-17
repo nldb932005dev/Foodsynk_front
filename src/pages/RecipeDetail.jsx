@@ -7,18 +7,38 @@ export default function RecipeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Receta
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Like / favorito
+  const [liked, setLiked] = useState(false);
+  const [favorited, setFavorited] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [loadingLike, setLoadingLike] = useState(false);
+  const [loadingFav, setLoadingFav] = useState(false);
+
+  // Comentarios
+  const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [newComment, setNewComment] = useState("");
+  const [postingComment, setPostingComment] = useState(false);
+  const [commentError, setCommentError] = useState("");
+
+  // ── Carga inicial de la receta ──────────────────────────────────────────────
   useEffect(() => {
     async function load() {
       try {
         setLoading(true);
         setError("");
         const res = await api.get(`/recipes/${id}`);
-        // La API puede devolver { data: recipe } o directamente recipe
-        setRecipe(res.data?.data ?? res.data);
+        const data = res.data?.data ?? res.data;
+        setRecipe(data);
+        setLiked(data.user_liked ?? false);
+        setFavorited(data.user_favorited ?? false);
+        setLikesCount(data.likes_count ?? 0);
       } catch {
         setError("No se pudo cargar la receta.");
       } finally {
@@ -28,6 +48,89 @@ export default function RecipeDetail() {
     load();
   }, [id]);
 
+  // ── Carga de comentarios ────────────────────────────────────────────────────
+  useEffect(() => {
+    async function loadComments() {
+      try {
+        setCommentsLoading(true);
+        const res = await api.get(`/recipes/${id}/comments`);
+        const data = res.data?.data ?? res.data;
+        setComments(Array.isArray(data) ? data : []);
+      } catch {
+        // comentarios son no-críticos, silencioso
+      } finally {
+        setCommentsLoading(false);
+      }
+    }
+    loadComments();
+  }, [id]);
+
+  // ── Like ────────────────────────────────────────────────────────────────────
+  async function toggleLike() {
+    if (!user || loadingLike) return;
+    setLoadingLike(true);
+    try {
+      if (liked) {
+        await api.delete(`/recipes/${id}/like`);
+        setLiked(false);
+        setLikesCount((c) => Math.max(0, c - 1));
+      } else {
+        await api.post(`/recipes/${id}/like`);
+        setLiked(true);
+        setLikesCount((c) => c + 1);
+      }
+    } catch {
+      // silencioso — el contador vuelve al estado correcto en el próximo load
+    } finally {
+      setLoadingLike(false);
+    }
+  }
+
+  // ── Favorito ────────────────────────────────────────────────────────────────
+  async function toggleFavorite() {
+    if (!user || loadingFav) return;
+    setLoadingFav(true);
+    try {
+      if (favorited) {
+        await api.delete(`/recipes/${id}/favorite`);
+        setFavorited(false);
+      } else {
+        await api.post(`/recipes/${id}/favorite`);
+        setFavorited(true);
+      }
+    } catch {
+    } finally {
+      setLoadingFav(false);
+    }
+  }
+
+  // ── Comentarios ─────────────────────────────────────────────────────────────
+  async function handleCommentSubmit(e) {
+    e.preventDefault();
+    if (!newComment.trim() || postingComment) return;
+    setPostingComment(true);
+    setCommentError("");
+    try {
+      const res = await api.post(`/recipes/${id}/comments`, { body: newComment.trim() });
+      const comment = res.data?.data ?? res.data;
+      setComments((prev) => [comment, ...prev]);
+      setNewComment("");
+    } catch {
+      setCommentError("No se pudo publicar el comentario. Inténtalo de nuevo.");
+    } finally {
+      setPostingComment(false);
+    }
+  }
+
+  async function handleDeleteComment(commentId) {
+    try {
+      await api.delete(`/comments/${commentId}`);
+      setComments((prev) => prev.filter((c) => c.id !== commentId));
+    } catch {
+    }
+  }
+
+  // ── Estados de carga / error ────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -55,7 +158,7 @@ export default function RecipeDetail() {
     );
   }
 
-  const isOwner = user && recipe && user.id === recipe.user_id;
+  const isOwner = user && user.id === recipe.user_id;
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -88,11 +191,7 @@ export default function RecipeDetail() {
       <article className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
         {/* Imagen */}
         {recipe.foto ? (
-          <img
-            src={recipe.foto}
-            alt={recipe.titulo}
-            className="w-full h-64 sm:h-80 object-cover"
-          />
+          <img src={recipe.foto} alt={recipe.titulo} className="w-full h-64 sm:h-80 object-cover" />
         ) : (
           <div className="w-full h-64 sm:h-80 bg-brand-green-light/20 flex items-center justify-center">
             <svg className="w-20 h-20 text-brand-green/20" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -101,45 +200,82 @@ export default function RecipeDetail() {
           </div>
         )}
 
-        {/* Contenido */}
         <div className="p-6 sm:p-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-brand-navy">
             {recipe.titulo ?? "Sin titulo"}
           </h1>
 
+          {/* Like + favorito */}
+          <div className="flex items-center gap-3 mt-4">
+            {/* Contador de likes — siempre visible */}
+            <button
+              onClick={toggleLike}
+              disabled={!user || loadingLike}
+              title={user ? (liked ? "Quitar like" : "Dar like") : "Inicia sesión para dar like"}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                liked
+                  ? "bg-brand-coral/10 text-brand-coral"
+                  : "bg-gray-100 text-gray-500 hover:bg-brand-coral/10 hover:text-brand-coral"
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              <svg className="w-4 h-4" fill={liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+              </svg>
+              {likesCount}
+            </button>
+
+            {/* Favorito — solo autenticados */}
+            {user && (
+              <button
+                onClick={toggleFavorite}
+                disabled={loadingFav}
+                title={favorited ? "Quitar de favoritos" : "Guardar en favoritos"}
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                  favorited
+                    ? "bg-brand-green/10 text-brand-green"
+                    : "bg-gray-100 text-gray-500 hover:bg-brand-green/10 hover:text-brand-green"
+                } disabled:opacity-50`}
+              >
+                <svg className="w-4 h-4" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                </svg>
+                {favorited ? "Guardada" : "Guardar"}
+              </button>
+            )}
+          </div>
+
           {/* Tiempo y etiquetas */}
           <div className="flex flex-wrap items-center gap-3 mt-4">
-            {recipe.tiempo && (
+            {recipe.time && (
               <div className="flex items-center gap-1.5 text-sm text-gray-500 bg-gray-100 rounded-full px-3 py-1">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {recipe.tiempo}
+                {recipe.time}
               </div>
             )}
-
-            {recipe.etiquetas && recipe.etiquetas.length > 0 &&
-              recipe.etiquetas.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-xs bg-brand-green-light/40 text-brand-green-dark px-3 py-1 rounded-full font-medium"
-                >
-                  {tag}
-                </span>
-              ))
-            }
+            {recipe.categories?.map((cat) => (
+              <span key={cat.id} className="text-xs bg-brand-green-light/40 text-brand-green-dark px-3 py-1 rounded-full font-medium">
+                {cat.name}
+              </span>
+            ))}
           </div>
 
-          {/* Ingredientes (si existen) */}
-          {recipe.ingredientes && recipe.ingredientes.length > 0 && (
+          {/* Ingredientes */}
+          {recipe.ingredients?.length > 0 && (
             <div className="mt-8">
               <h2 className="text-lg font-semibold text-brand-navy mb-3">Ingredientes</h2>
               <ul className="space-y-2">
-                {recipe.ingredientes.map((ing, i) => (
+                {recipe.ingredients.map((ing, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
                     <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-brand-green flex-shrink-0" />
-                    {typeof ing === "string" ? ing : ing.nombre ?? ing.name}
-                    {ing.pivot?.cantidad && ` - ${ing.pivot.cantidad}`}
+                    {(() => {
+                      const nombre = typeof ing === "string" ? ing : ing.nombre ?? ing.name;
+                      const cantidad = ing.pivot?.cantidad;
+                      const unidad = ing.pivot?.unidad_medida;
+                      if (cantidad) return `${cantidad}${unidad ? " " + unidad : ""} de ${nombre}`;
+                      return nombre;
+                    })()}
                   </li>
                 ))}
               </ul>
@@ -149,7 +285,7 @@ export default function RecipeDetail() {
           {/* Pasos */}
           {recipe.pasos && (
             <div className="mt-8">
-              <h2 className="text-lg font-semibold text-brand-navy mb-3">Preparacion</h2>
+              <h2 className="text-lg font-semibold text-brand-navy mb-3">Preparación</h2>
               <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-line leading-relaxed">
                 {recipe.pasos}
               </div>
@@ -157,6 +293,85 @@ export default function RecipeDetail() {
           )}
         </div>
       </article>
+
+      {/* Sección de comentarios */}
+      <section className="mt-6 bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sm:p-8">
+        <h2 className="text-lg font-semibold text-brand-navy mb-4">Comentarios</h2>
+
+        {/* Formulario — solo autenticados */}
+        {user && (
+          <form onSubmit={handleCommentSubmit} className="mb-6">
+            <textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Escribe un comentario..."
+              rows={3}
+              className="w-full rounded-xl border border-gray-200 bg-brand-cream/50 px-4 py-3 text-sm text-brand-navy placeholder:text-gray-400 focus:border-brand-green focus:outline-none focus:ring-2 focus:ring-brand-green/20 resize-none transition-colors"
+            />
+            {commentError && (
+              <p className="mt-1 text-xs text-brand-coral">{commentError}</p>
+            )}
+            <div className="flex justify-end mt-2">
+              <button
+                type="submit"
+                disabled={postingComment || !newComment.trim()}
+                className="rounded-xl bg-brand-green px-4 py-2 text-sm font-semibold text-white hover:bg-brand-green-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {postingComment ? "Publicando..." : "Publicar"}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Lista de comentarios */}
+        {commentsLoading ? (
+          <div className="flex justify-center py-6">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-green-light border-t-brand-green" />
+          </div>
+        ) : comments.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-4">
+            {user ? "Sé el primero en comentar." : "Sin comentarios todavía."}
+          </p>
+        ) : (
+          <ul className="space-y-4">
+            {comments.map((comment) => (
+              <li key={comment.id} className="flex gap-3">
+                {/* Avatar */}
+                <div className="h-8 w-8 rounded-full bg-brand-green-light/40 flex items-center justify-center text-xs font-semibold text-brand-green-dark flex-shrink-0">
+                  {comment.user?.name?.charAt(0)?.toUpperCase() ?? "?"}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-brand-navy">
+                      {comment.user?.name ?? "Usuario"}
+                    </span>
+                    {user?.id === comment.user_id && (
+                      <button
+                        onClick={() => handleDeleteComment(comment.id)}
+                        className="text-xs text-gray-400 hover:text-brand-coral transition-colors flex-shrink-0"
+                        title="Eliminar comentario"
+                      >
+                        Eliminar
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-700 mt-0.5 break-words">{comment.body}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* CTA para no autenticados */}
+        {!user && (
+          <p className="mt-4 text-center text-sm text-gray-500">
+            <button onClick={() => navigate("/login")} className="text-brand-green font-medium hover:underline">
+              Inicia sesión
+            </button>{" "}
+            para dejar un comentario.
+          </p>
+        )}
+      </section>
     </div>
   );
 }

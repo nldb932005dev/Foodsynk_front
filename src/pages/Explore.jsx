@@ -1,15 +1,57 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
-import useRecipes from "../hooks/useRecipes";
+import useRecipeSearch, { TIME_SLIDER_MAX } from "../hooks/useRecipeSearch";
 import PageHeader from "../components/PageHeader";
+import SearchBar from "../components/SearchBar";
+import FilterPanel from "../components/FilterPanel";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorMessage from "../components/ErrorMessage";
 import EmptyState from "../components/EmptyState";
 import RecipeGrid from "../components/RecipeGrid";
 
+const QUICK_TAGS_COUNT = 4;
+
 export default function Explore() {
   const { token } = useAuth();
-  const { recipes, loading, error } = useRecipes();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const {
+    filtered,
+    loading,
+    error,
+    query,
+    setQuery,
+    tags,
+    activeTag,
+    setActiveTag,
+    timeMin,
+    setTimeMin,
+    timeMax,
+    setTimeMax,
+    selectedAllergens,
+    toggleAllergen,
+    resetFilters,
+    isFiltering,
+    activeFiltersCount,
+  } = useRecipeSearch();
+
+  const filterPanelProps = {
+    tags,
+    activeTag,
+    onTagClick: setActiveTag,
+    timeMin,
+    timeMax,
+    setTimeMin,
+    setTimeMax,
+    timeSliderMax: TIME_SLIDER_MAX,
+    selectedAllergens,
+    onAllergenToggle: toggleAllergen,
+    onReset: resetFilters,
+    activeFiltersCount,
+  };
+
+  const quickTags = tags.slice(0, QUICK_TAGS_COUNT);
 
   return (
     <div>
@@ -18,29 +60,173 @@ export default function Explore() {
         subtitle="Descubre recetas de toda la comunidad"
       />
 
-      {loading && <LoadingSpinner />}
-      {!loading && error && <ErrorMessage message={error} />}
+      {/* Search bar — full width on all breakpoints */}
+      <div className="mt-4">
+        <SearchBar value={query} onChange={setQuery} />
+      </div>
 
-      {!loading && !error && recipes.length === 0 && (
-        <EmptyState
-          icon={
-            <svg className="w-16 h-16" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.871c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.473 18 10.608v2.513M15 8.25v-1.5m-6 1.5v-1.5m12 9.75l-1.5.75a3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0L3 16.5m15-3.379a48.474 48.474 0 00-6-.371c-2.032 0-4.034.126-6 .371m12 0c.39.049.777.102 1.163.16 1.07.16 1.837 1.094 1.837 2.175v5.169c0 .621-.504 1.125-1.125 1.125H4.125A1.125 1.125 0 013 20.625v-5.17c0-1.08.768-2.014 1.837-2.174A47.78 47.78 0 016 13.12M12.265 3.11a.375.375 0 11-.53 0L12 2.845l.265.265zm-3 0a.375.375 0 11-.53 0L9 2.845l.265.265zm6 0a.375.375 0 11-.53 0L15 2.845l.265.265z" />
+      {/* Quick filters strip — desktop only (shown above the sidebar+grid layout) */}
+      {!loading && tags.length > 0 && (
+        <div
+          className="hidden lg:flex mt-3 flex-wrap items-center gap-2"
+          role="group"
+          aria-label="Filtros rápidos por categoría"
+        >
+          <span className="text-xs font-medium text-gray-400 mr-1" aria-hidden="true">
+            Más buscados:
+          </span>
+          <button
+            onClick={() => setActiveTag(null)}
+            aria-pressed={activeTag === null}
+            className={`rounded-full px-3.5 py-1 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-green ${
+              activeTag === null
+                ? "bg-brand-green text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            Todas
+          </button>
+          {quickTags.map((tag) => (
+            <button
+              key={tag}
+              onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+              aria-pressed={activeTag === tag}
+              className={`rounded-full px-3.5 py-1 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-green ${
+                activeTag === tag
+                  ? "bg-brand-green text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Mobile/tablet: quick pills + "Filtros" button */}
+      {!loading && (
+        <div
+          className="mt-3 flex flex-wrap items-center gap-2 lg:hidden"
+          role="group"
+          aria-label="Filtros rápidos"
+        >
+          {quickTags.length > 0 && (
+            <>
+              <button
+                onClick={() => setActiveTag(null)}
+                aria-pressed={activeTag === null}
+                className={`rounded-full px-3.5 py-1 text-xs font-semibold transition-colors ${
+                  activeTag === null
+                    ? "bg-brand-green text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                Todas
+              </button>
+              {quickTags.map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+                  aria-pressed={activeTag === tag}
+                  className={`rounded-full px-3.5 py-1 text-xs font-semibold transition-colors ${
+                    activeTag === tag
+                      ? "bg-brand-green text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </>
+          )}
+
+          {/* "Más filtros" button */}
+          <button
+            onClick={() => setDrawerOpen(true)}
+            aria-label={
+              activeFiltersCount > 0
+                ? `Más filtros, ${activeFiltersCount} activo${activeFiltersCount !== 1 ? "s" : ""}`
+                : "Más filtros"
+            }
+            className="ml-auto flex items-center gap-1.5 rounded-full border border-gray-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-gray-700 hover:border-brand-green hover:text-brand-green transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-green"
+          >
+            <svg
+              aria-hidden="true"
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M6 8h12M10 12h4" />
             </svg>
-          }
-          title="No hay recetas todavia"
-        />
+            Filtros
+            {activeFiltersCount > 0 && (
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-brand-green text-white text-[10px] font-bold">
+                {activeFiltersCount}
+              </span>
+            )}
+          </button>
+        </div>
       )}
 
-      {!loading && !error && recipes.length > 0 && (
-        <RecipeGrid recipes={recipes} />
-      )}
+      {/* Main layout: sidebar (desktop) + results */}
+      <div className="mt-5 flex gap-6 items-start">
+        {/* Sidebar — desktop only */}
+        <aside
+          className="hidden lg:block w-60 flex-shrink-0 sticky top-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm"
+          aria-label="Panel de filtros"
+        >
+          <h2 className="text-sm font-semibold text-brand-navy mb-5">Filtros</h2>
+          <FilterPanel {...filterPanelProps} />
+        </aside>
 
-      {/* CTA de registro — solo si no hay sesion */}
-      {!token && !loading && !error && recipes.length > 0 && (
+        {/* Results */}
+        <main
+          className="flex-1 min-w-0"
+          aria-live="polite"
+          aria-label="Resultados de recetas"
+          aria-atomic="false"
+        >
+          {loading && <LoadingSpinner />}
+          {!loading && error && <ErrorMessage message={error} />}
+
+          {!loading && !error && filtered.length === 0 && (
+            <EmptyState
+              icon={
+                <svg
+                  className="w-16 h-16"
+                  aria-hidden="true"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
+                  />
+                </svg>
+              }
+              title={isFiltering ? "Sin resultados" : "No hay recetas todavía"}
+              subtitle={
+                isFiltering ? "Prueba con otro término o quita los filtros." : undefined
+              }
+            />
+          )}
+
+          {!loading && !error && filtered.length > 0 && (
+            <RecipeGrid recipes={filtered} />
+          )}
+        </main>
+      </div>
+
+      {/* CTA — only for guests when there are results */}
+      {!token && !loading && !error && filtered.length > 0 && (
         <div className="mt-10 text-center rounded-2xl border border-brand-green-light/50 bg-white p-6">
           <p className="text-brand-navy font-semibold">
-            Registrate para guardar tus propias recetas
+            Regístrate para guardar tus propias recetas
           </p>
           <p className="text-sm text-gray-500 mt-1">
             Crea, organiza y gestiona tus recetas favoritas.
@@ -51,6 +237,62 @@ export default function Explore() {
           >
             Crear cuenta gratis
           </Link>
+        </div>
+      )}
+
+      {/* Mobile filter drawer */}
+      {drawerOpen && (
+        <div
+          className="fixed inset-0 z-50 lg:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Panel de filtros"
+        >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            aria-hidden="true"
+            onClick={() => setDrawerOpen(false)}
+          />
+
+          {/* Drawer panel */}
+          <div className="absolute inset-y-0 left-0 flex w-80 max-w-full flex-col bg-white shadow-2xl animate-fade-in">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+              <h2 className="text-sm font-semibold text-brand-navy">Filtros</h2>
+              <button
+                onClick={() => setDrawerOpen(false)}
+                aria-label="Cerrar panel de filtros"
+                className="rounded-full p-1.5 text-gray-500 hover:bg-gray-100 hover:text-brand-navy transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-green"
+              >
+                <svg
+                  aria-hidden="true"
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Scrollable filter content */}
+            <div className="flex-1 overflow-y-auto p-5">
+              <FilterPanel {...filterPanelProps} />
+            </div>
+
+            {/* Footer: apply button */}
+            <div className="border-t border-gray-100 px-5 py-4">
+              <button
+                onClick={() => setDrawerOpen(false)}
+                className="w-full rounded-xl bg-brand-green py-2.5 text-sm font-semibold text-white hover:bg-brand-green-dark transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green"
+              >
+                Ver {filtered.length} receta{filtered.length !== 1 ? "s" : ""}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
