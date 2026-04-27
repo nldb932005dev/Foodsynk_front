@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorMessage from "../components/ErrorMessage";
+import CreatableSelector from "../components/CreatableSelector";
 
 const MAX_TITULO = 150;
 const MAX_PASOS  = 10000;
@@ -28,18 +29,15 @@ export default function CreateRecipe() {
   const [foto,   setFoto]   = useState("");
   const [status, setStatus] = useState("draft");
 
-  const [selectedCategories,  setSelectedCategories]  = useState([]); // [id, ...]
-  const [selectedIngredients, setSelectedIngredients] = useState([]); // [id, ...]
+  // [{id, name, isNew}] para categorías · [{id, nombre, isNew}] para ingredientes
+  const [selectedCategories,  setSelectedCategories]  = useState([]);
+  const [selectedIngredients, setSelectedIngredients] = useState([]);
 
   // ── Opciones de selección ───────────────────────────────────────────────
   const [categories,  setCategories]  = useState([]);
   const [ingredients, setIngredients] = useState([]);
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [optionsError,   setOptionsError]   = useState("");
-
-  // ── Búsqueda dentro de los listados ────────────────────────────────────
-  const [catSearch, setCatSearch] = useState("");
-  const [ingSearch, setIngSearch] = useState("");
 
   // ── Estado del envío ────────────────────────────────────────────────────
   const [saving,  setSaving]  = useState(false);
@@ -66,17 +64,49 @@ export default function CreateRecipe() {
     loadOptions();
   }, []);
 
-  // ── Helpers de selección ────────────────────────────────────────────────
-  function toggleCategory(id) {
+  // ── Handlers de selección ────────────────────────────────────────────────
+  function handleSelectCategory(item) {
     setSelectedCategories((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      prev.some((c) => c.id === item.id)
+        ? prev.filter((c) => c.id !== item.id)
+        : [...prev, { id: item.id, name: item.name, isNew: false }]
     );
   }
 
-  function toggleIngredient(id) {
+  function handleRemoveCategory(id) {
+    setSelectedCategories((prev) => prev.filter((c) => c.id !== id));
+  }
+
+  async function handleCreateCategory(name) {
+    const res = await api.post("/categories", { name });
+    const created = res.data?.data ?? res.data;
+    setSelectedCategories((prev) => [
+      ...prev,
+      { id: created.id, name: created.name, isNew: true },
+    ]);
+    setCategories((prev) => [...prev, created]);
+  }
+
+  function handleSelectIngredient(item) {
     setSelectedIngredients((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      prev.some((i) => i.id === item.id)
+        ? prev.filter((i) => i.id !== item.id)
+        : [...prev, { id: item.id, nombre: item.nombre, isNew: false }]
     );
+  }
+
+  function handleRemoveIngredient(id) {
+    setSelectedIngredients((prev) => prev.filter((i) => i.id !== id));
+  }
+
+  async function handleCreateIngredient(nombre) {
+    const res = await api.post("/ingredients", { nombre });
+    const created = res.data?.data ?? res.data;
+    setSelectedIngredients((prev) => [
+      ...prev,
+      { id: created.id, nombre: created.nombre, isNew: true },
+    ]);
+    setIngredients((prev) => [...prev, created]);
   }
 
   // ── Validación ──────────────────────────────────────────────────────────
@@ -88,10 +118,10 @@ export default function CreateRecipe() {
       : "";
 
   const publishErrors = isPublishing ? [
-    ...(!titulo.trim()                 ? ["El título es obligatorio."]                       : []),
-    ...(!pasos.trim()                  ? ["Los pasos de preparación son obligatorios."]       : []),
-    ...(!time || parseInt(time, 10) <= 0 ? ["El tiempo de preparación es obligatorio."]      : []),
-    ...(selectedCategories.length === 0  ? ["Añade al menos una categoría."]                 : []),
+    ...(!titulo.trim()                    ? ["El título es obligatorio."]                  : []),
+    ...(!pasos.trim()                     ? ["Los pasos de preparación son obligatorios."] : []),
+    ...(!time || parseInt(time, 10) <= 0  ? ["El tiempo de preparación es obligatorio."]  : []),
+    ...(selectedCategories.length === 0   ? ["Añade al menos una categoría."]              : []),
   ] : [];
 
   const missingForPublish = publishErrors.length > 0;
@@ -115,8 +145,8 @@ export default function CreateRecipe() {
         pasos:        pasos.trim()   || null,
         foto:         foto.trim()    || null,
         status,
-        category_ids: selectedCategories,
-        ingredients:  selectedIngredients.map((id) => ({ id })),
+        category_ids: selectedCategories.map((c) => c.id),
+        ingredients:  selectedIngredients.map((i) => ({ id: i.id })),
       });
 
       navigate("/my-recipes");
@@ -139,14 +169,6 @@ export default function CreateRecipe() {
       setSaving(false);
     }
   }
-
-  // ── Filtrado de listas ───────────────────────────────────────────────────
-  const filteredCats = categories.filter((c) =>
-    c.name.toLowerCase().includes(catSearch.toLowerCase())
-  );
-  const filteredIngs = ingredients.filter((i) =>
-    i.nombre.toLowerCase().includes(ingSearch.toLowerCase())
-  );
 
   // ── Render ───────────────────────────────────────────────────────────────
   if (loadingOptions) return <LoadingSpinner text="Cargando opciones..." />;
@@ -257,94 +279,31 @@ export default function CreateRecipe() {
           </label>
 
           {/* Categorías */}
-          <div>
-            <span className="text-sm font-medium text-brand-navy">
-              Categorías {isPublishing && <span className="text-brand-coral">*</span>}
-            </span>
-            <p className="text-xs text-gray-400 mt-0.5 mb-1.5">
-              Opcional si guardas como borrador · Obligatoria si publicas (mínimo 1)
-            </p>
-            <input
-              type="text"
-              className="w-full rounded-xl border border-gray-200 bg-brand-cream/50 px-3 py-2 text-sm outline-none focus:border-brand-green focus:ring-2 focus:ring-brand-green/20"
-              placeholder="Buscar categoría..."
-              value={catSearch}
-              onChange={(e) => setCatSearch(e.target.value)}
-            />
-            <div className="mt-1.5 max-h-40 overflow-y-auto rounded-xl border border-gray-200 bg-white divide-y divide-gray-50">
-              {filteredCats.length === 0 ? (
-                <p className="px-3 py-2 text-xs text-gray-400">Sin resultados</p>
-              ) : (
-                filteredCats.map((cat) => (
-                  <label key={cat.id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-brand-cream/50">
-                    <input
-                      type="checkbox"
-                      className="accent-brand-green"
-                      checked={selectedCategories.includes(cat.id)}
-                      onChange={() => toggleCategory(cat.id)}
-                    />
-                    <span className="text-sm text-brand-navy">{cat.name}</span>
-                  </label>
-                ))
-              )}
-            </div>
-            {selectedCategories.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {selectedCategories.map((id) => {
-                  const cat = categories.find((c) => c.id === id);
-                  return cat ? (
-                    <span key={id} className="flex items-center gap-1 bg-brand-green/10 text-brand-green text-xs px-2.5 py-1 rounded-full font-medium">
-                      {cat.name}
-                      <button type="button" onClick={() => toggleCategory(id)} aria-label={`Quitar ${cat.name}`} className="ml-0.5 hover:text-brand-green-dark font-bold leading-none">×</button>
-                    </span>
-                  ) : null;
-                })}
-              </div>
-            )}
-          </div>
+          <CreatableSelector
+            label="Categorías"
+            items={categories}
+            selected={selectedCategories}
+            onSelect={handleSelectCategory}
+            onCreate={handleCreateCategory}
+            onRemove={handleRemoveCategory}
+            nameField="name"
+            maxItems={15}
+            required={isPublishing}
+            helpText="Opcional si guardas como borrador · Obligatoria si publicas (mínimo 1)"
+          />
 
           {/* Ingredientes */}
-          <div>
-            <span className="text-sm font-medium text-brand-navy">Ingredientes</span>
-            <p className="text-xs text-gray-400 mt-0.5 mb-1.5">Opcional</p>
-            <input
-              type="text"
-              className="w-full rounded-xl border border-gray-200 bg-brand-cream/50 px-3 py-2 text-sm outline-none focus:border-brand-green focus:ring-2 focus:ring-brand-green/20"
-              placeholder="Buscar ingrediente..."
-              value={ingSearch}
-              onChange={(e) => setIngSearch(e.target.value)}
-            />
-            <div className="mt-1.5 max-h-40 overflow-y-auto rounded-xl border border-gray-200 bg-white divide-y divide-gray-50">
-              {filteredIngs.length === 0 ? (
-                <p className="px-3 py-2 text-xs text-gray-400">Sin resultados</p>
-              ) : (
-                filteredIngs.map((ing) => (
-                  <label key={ing.id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-brand-cream/50">
-                    <input
-                      type="checkbox"
-                      className="accent-brand-green"
-                      checked={selectedIngredients.includes(ing.id)}
-                      onChange={() => toggleIngredient(ing.id)}
-                    />
-                    <span className="text-sm text-brand-navy">{ing.nombre}</span>
-                  </label>
-                ))
-              )}
-            </div>
-            {selectedIngredients.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {selectedIngredients.map((id) => {
-                  const ing = ingredients.find((i) => i.id === id);
-                  return ing ? (
-                    <span key={id} className="flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-full font-medium">
-                      {ing.nombre}
-                      <button type="button" onClick={() => toggleIngredient(id)} aria-label={`Quitar ${ing.nombre}`} className="ml-0.5 hover:text-gray-800 font-bold leading-none">×</button>
-                    </span>
-                  ) : null;
-                })}
-              </div>
-            )}
-          </div>
+          <CreatableSelector
+            label="Ingredientes"
+            items={ingredients}
+            selected={selectedIngredients}
+            onSelect={handleSelectIngredient}
+            onCreate={handleCreateIngredient}
+            onRemove={handleRemoveIngredient}
+            nameField="nombre"
+            maxItems={30}
+            helpText="Opcional"
+          />
 
           {/* Errores de validación para publicar */}
           {publishErrors.length > 0 && (

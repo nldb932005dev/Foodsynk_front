@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../api/axios";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorMessage from "../components/ErrorMessage";
+import CreatableSelector from "../components/CreatableSelector";
 
 const MAX_TITULO = 150;
 const MAX_PASOS  = 10000;
@@ -34,20 +35,16 @@ export default function EditRecipe() {
   const [foto,   setFoto]   = useState("");
   const [status, setStatus] = useState("draft");
 
+  // [{id, name, isNew}] para categorías · [{id, nombre, isNew}] para ingredientes
   const [selectedCategories,  setSelectedCategories]  = useState([]);
   const [selectedIngredients, setSelectedIngredients] = useState([]);
 
-  // Opciones
+  // Opciones (listas del servidor)
   const [categories,  setCategories]  = useState([]);
   const [ingredients, setIngredients] = useState([]);
 
-  // Búsqueda en listados
-  const [catSearch, setCatSearch] = useState("");
-  const [ingSearch, setIngSearch] = useState("");
-
-  // Original para detectar cambios
+  // Original para detectar cambios en campos de texto
   const [original, setOriginal] = useState({});
-
   const [touched, setTouched] = useState({});
 
   useEffect(() => {
@@ -78,10 +75,12 @@ export default function EditRecipe() {
         setStatus(data.status);
         setOriginal(data);
 
-        const currentCatIds = (recipe.categories ?? []).map((c) => c.id);
-        const currentIngIds = (recipe.ingredients ?? []).map((i) => i.id);
-        setSelectedCategories(currentCatIds);
-        setSelectedIngredients(currentIngIds);
+        setSelectedCategories(
+          (recipe.categories ?? []).map((c) => ({ id: c.id, name: c.name, isNew: false }))
+        );
+        setSelectedIngredients(
+          (recipe.ingredients ?? []).map((i) => ({ id: i.id, nombre: i.nombre, isNew: false }))
+        );
 
         setCategories(catRes.data?.data  ?? catRes.data  ?? []);
         setIngredients(ingRes.data?.data ?? ingRes.data  ?? []);
@@ -94,19 +93,52 @@ export default function EditRecipe() {
     load();
   }, [id]);
 
-  function toggleCategory(catId) {
+  // ── Handlers de selección ────────────────────────────────────────────────
+  function handleSelectCategory(item) {
     setSelectedCategories((prev) =>
-      prev.includes(catId) ? prev.filter((x) => x !== catId) : [...prev, catId]
+      prev.some((c) => c.id === item.id)
+        ? prev.filter((c) => c.id !== item.id)
+        : [...prev, { id: item.id, name: item.name, isNew: false }]
     );
   }
 
-  function toggleIngredient(ingId) {
+  function handleRemoveCategory(itemId) {
+    setSelectedCategories((prev) => prev.filter((c) => c.id !== itemId));
+  }
+
+  async function handleCreateCategory(name) {
+    const res = await api.post("/categories", { name });
+    const created = res.data?.data ?? res.data;
+    setSelectedCategories((prev) => [
+      ...prev,
+      { id: created.id, name: created.name, isNew: true },
+    ]);
+    setCategories((prev) => [...prev, created]);
+  }
+
+  function handleSelectIngredient(item) {
     setSelectedIngredients((prev) =>
-      prev.includes(ingId) ? prev.filter((x) => x !== ingId) : [...prev, ingId]
+      prev.some((i) => i.id === item.id)
+        ? prev.filter((i) => i.id !== item.id)
+        : [...prev, { id: item.id, nombre: item.nombre, isNew: false }]
     );
   }
 
-  // Validación
+  function handleRemoveIngredient(itemId) {
+    setSelectedIngredients((prev) => prev.filter((i) => i.id !== itemId));
+  }
+
+  async function handleCreateIngredient(nombre) {
+    const res = await api.post("/ingredients", { nombre });
+    const created = res.data?.data ?? res.data;
+    setSelectedIngredients((prev) => [
+      ...prev,
+      { id: created.id, nombre: created.nombre, isNew: true },
+    ]);
+    setIngredients((prev) => [...prev, created]);
+  }
+
+  // ── Validación ──────────────────────────────────────────────────────────
   const fotoError =
     touched.foto && foto && !isValidUrl(foto)
       ? "La URL no es válida (debe empezar por http:// o https://)."
@@ -122,10 +154,10 @@ export default function EditRecipe() {
     status !== original.status;
 
   const publishErrors = isPublishing ? [
-    ...(!titulo.trim()                   ? ["El título es obligatorio."]                  : []),
-    ...(!pasos.trim()                    ? ["Los pasos de preparación son obligatorios."] : []),
-    ...(!time || parseInt(time, 10) <= 0 ? ["El tiempo de preparación es obligatorio."]  : []),
-    ...(selectedCategories.length === 0  ? ["Añade al menos una categoría."]              : []),
+    ...(!titulo.trim()                    ? ["El título es obligatorio."]                  : []),
+    ...(!pasos.trim()                     ? ["Los pasos de preparación son obligatorios."] : []),
+    ...(!time || parseInt(time, 10) <= 0  ? ["El tiempo de preparación es obligatorio."]  : []),
+    ...(selectedCategories.length === 0   ? ["Añade al menos una categoría."]              : []),
   ] : [];
 
   const missingForPublish = publishErrors.length > 0;
@@ -149,8 +181,8 @@ export default function EditRecipe() {
         pasos:        pasos.trim()   || null,
         foto:         foto.trim()    || null,
         status,
-        category_ids: selectedCategories,
-        ingredients:  selectedIngredients.map((ingId) => ({ id: ingId })),
+        category_ids: selectedCategories.map((c) => c.id),
+        ingredients:  selectedIngredients.map((i) => ({ id: i.id })),
       });
 
       setSuccess("Receta actualizada correctamente.");
@@ -179,13 +211,6 @@ export default function EditRecipe() {
       setSaving(false);
     }
   }
-
-  const filteredCats = categories.filter((c) =>
-    c.name.toLowerCase().includes(catSearch.toLowerCase())
-  );
-  const filteredIngs = ingredients.filter((i) =>
-    i.nombre.toLowerCase().includes(ingSearch.toLowerCase())
-  );
 
   if (loading) return <LoadingSpinner text="Cargando receta..." />;
 
@@ -339,94 +364,31 @@ export default function EditRecipe() {
           </label>
 
           {/* Categorías */}
-          <div>
-            <span className="text-sm font-medium text-brand-navy">
-              Categorías {isPublishing && <span className="text-brand-coral">*</span>}
-            </span>
-            <p className="text-xs text-gray-400 mt-0.5 mb-1.5">
-              Opcional si guardas como borrador · Obligatoria si publicas (mínimo 1)
-            </p>
-            <input
-              type="text"
-              className="w-full rounded-xl border border-gray-200 bg-brand-cream/50 px-3 py-2 text-sm outline-none focus:border-brand-green focus:ring-2 focus:ring-brand-green/20"
-              placeholder="Buscar categoría..."
-              value={catSearch}
-              onChange={(e) => setCatSearch(e.target.value)}
-            />
-            <div className="mt-1.5 max-h-40 overflow-y-auto rounded-xl border border-gray-200 bg-white divide-y divide-gray-50">
-              {filteredCats.length === 0 ? (
-                <p className="px-3 py-2 text-xs text-gray-400">Sin resultados</p>
-              ) : (
-                filteredCats.map((cat) => (
-                  <label key={cat.id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-brand-cream/50">
-                    <input
-                      type="checkbox"
-                      className="accent-brand-green"
-                      checked={selectedCategories.includes(cat.id)}
-                      onChange={() => toggleCategory(cat.id)}
-                    />
-                    <span className="text-sm text-brand-navy">{cat.name}</span>
-                  </label>
-                ))
-              )}
-            </div>
-            {selectedCategories.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {selectedCategories.map((id) => {
-                  const cat = categories.find((c) => c.id === id);
-                  return cat ? (
-                    <span key={id} className="flex items-center gap-1 bg-brand-green/10 text-brand-green text-xs px-2.5 py-1 rounded-full font-medium">
-                      {cat.name}
-                      <button type="button" onClick={() => toggleCategory(id)} aria-label={`Quitar ${cat.name}`} className="ml-0.5 hover:text-brand-green-dark font-bold leading-none">×</button>
-                    </span>
-                  ) : null;
-                })}
-              </div>
-            )}
-          </div>
+          <CreatableSelector
+            label="Categorías"
+            items={categories}
+            selected={selectedCategories}
+            onSelect={handleSelectCategory}
+            onCreate={handleCreateCategory}
+            onRemove={handleRemoveCategory}
+            nameField="name"
+            maxItems={15}
+            required={isPublishing}
+            helpText="Opcional si guardas como borrador · Obligatoria si publicas (mínimo 1)"
+          />
 
           {/* Ingredientes */}
-          <div>
-            <span className="text-sm font-medium text-brand-navy">Ingredientes</span>
-            <p className="text-xs text-gray-400 mt-0.5 mb-1.5">Opcional</p>
-            <input
-              type="text"
-              className="w-full rounded-xl border border-gray-200 bg-brand-cream/50 px-3 py-2 text-sm outline-none focus:border-brand-green focus:ring-2 focus:ring-brand-green/20"
-              placeholder="Buscar ingrediente..."
-              value={ingSearch}
-              onChange={(e) => setIngSearch(e.target.value)}
-            />
-            <div className="mt-1.5 max-h-40 overflow-y-auto rounded-xl border border-gray-200 bg-white divide-y divide-gray-50">
-              {filteredIngs.length === 0 ? (
-                <p className="px-3 py-2 text-xs text-gray-400">Sin resultados</p>
-              ) : (
-                filteredIngs.map((ing) => (
-                  <label key={ing.id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-brand-cream/50">
-                    <input
-                      type="checkbox"
-                      className="accent-brand-green"
-                      checked={selectedIngredients.includes(ing.id)}
-                      onChange={() => toggleIngredient(ing.id)}
-                    />
-                    <span className="text-sm text-brand-navy">{ing.nombre}</span>
-                  </label>
-                ))
-              )}
-            </div>
-            {selectedIngredients.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {selectedIngredients.map((id) => {
-                  const ing = ingredients.find((i) => i.id === id);
-                  return ing ? (
-                    <span key={id} className="flex items-center gap-1 bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-full font-medium">
-                      {ing.nombre}
-                      <button type="button" onClick={() => toggleIngredient(id)} aria-label={`Quitar ${ing.nombre}`} className="ml-0.5 hover:text-gray-800 font-bold leading-none">×</button>
-                    </span>
-                  ) : null;
-                })}
-              </div>
-            )}
-          </div>
+          <CreatableSelector
+            label="Ingredientes"
+            items={ingredients}
+            selected={selectedIngredients}
+            onSelect={handleSelectIngredient}
+            onCreate={handleCreateIngredient}
+            onRemove={handleRemoveIngredient}
+            nameField="nombre"
+            maxItems={30}
+            helpText="Opcional"
+          />
 
           {/* Errores de validación para publicar */}
           {publishErrors.length > 0 && (
