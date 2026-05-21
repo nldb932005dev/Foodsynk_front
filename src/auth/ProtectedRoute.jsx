@@ -3,7 +3,8 @@ import { useAuth } from "./useAuth";
 
 
 export default function ProtectedRoute() {
- const { token } = useAuth();
+ const { token, loading } = useAuth();
+ if (loading) return null;
  if (!token) return <Navigate to="/login" replace />;
  return <Outlet />;
 }

@@ -26,26 +26,47 @@ export default function useRecipeSearch() {
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [activeTag, setActiveTag] = useState(null);
+  const [activeTags, setActiveTags] = useState([]);
   const [timeMin, setTimeMin] = useState(0);
   const [timeMax, setTimeMax] = useState(TIME_SLIDER_MAX);
   const [selectedAllergens, setSelectedAllergens] = useState([]);
+  const [sortBy, setSortBy] = useState("recent"); // "recent" | "popular"
 
   useEffect(() => {
-    async function load() {
+    async function loadAll() {
       try {
         setLoading(true);
         setError("");
-        const res = await api.get("/recipes");
-        const data = res.data?.data ?? res.data;
-        setAllRecipes(Array.isArray(data) ? data : []);
+        // El backend pagina /api/recipes (15 por página). Pedimos la primera,
+        // leemos meta.last_page y disparamos el resto en paralelo. Necesario
+        // hasta que el backend exponga ?per_page=999 o devuelva todo sin paginar.
+        const first = await api.get("/recipes?page=1");
+        const firstData = first.data?.data ?? first.data;
+        const lastPage = first.data?.meta?.last_page ?? 1;
+        const accumulated = Array.isArray(firstData) ? [...firstData] : [];
+        if (lastPage > 1) {
+          const rest = await Promise.all(
+            Array.from({ length: lastPage - 1 }, (_, i) =>
+              api.get(`/recipes?page=${i + 2}`)
+            )
+          );
+          rest.forEach((r) => {
+            const d = r.data?.data ?? r.data;
+            if (Array.isArray(d)) accumulated.push(...d);
+          });
+        }
+        // Workaround: el backend ordena por id ASC, lo que entierra las recetas
+        // nuevas al final. Ordenamos client-side por id DESC mientras el backend
+        // no aplique orderByDesc('created_at').
+        accumulated.sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
+        setAllRecipes(accumulated);
       } catch {
         setError("No se pudieron cargar las recetas.");
       } finally {
         setLoading(false);
       }
     }
-    load();
+    loadAll();
   }, []);
 
   useEffect(() => {
@@ -71,8 +92,12 @@ export default function useRecipeSearch() {
       );
     }
 
-    if (activeTag) {
-      result = result.filter((r) => (r.categories ?? []).some((c) => c.name === activeTag));
+    if (activeTags.length > 0) {
+      // AND/intersección: la receta debe cumplir TODAS las categorías seleccionadas.
+      result = result.filter((r) => {
+        const names = (r.categories ?? []).map((c) => c.name);
+        return activeTags.every((t) => names.includes(t));
+      });
     }
 
     if (timeMin > 0 || timeMax < TIME_SLIDER_MAX) {
@@ -96,8 +121,16 @@ export default function useRecipeSearch() {
       });
     }
 
+    // Orden: "recent" mantiene el id DESC del load; "popular" reordena por
+    // likes_count (copia, para no mutar allRecipes ni el resultado filtrado).
+    if (sortBy === "popular") {
+      result = [...result].sort(
+        (a, b) => (b.likes_count ?? 0) - (a.likes_count ?? 0)
+      );
+    }
+
     return result;
-  }, [allRecipes, debouncedQuery, activeTag, timeMin, timeMax, selectedAllergens]);
+  }, [allRecipes, debouncedQuery, activeTags, timeMin, timeMax, selectedAllergens, sortBy]);
 
   function toggleAllergen(id) {
     setSelectedAllergens((prev) =>
@@ -105,8 +138,18 @@ export default function useRecipeSearch() {
     );
   }
 
+  function toggleTag(name) {
+    setActiveTags((prev) =>
+      prev.includes(name) ? prev.filter((t) => t !== name) : [...prev, name]
+    );
+  }
+
+  function clearTags() {
+    setActiveTags([]);
+  }
+
   function resetFilters() {
-    setActiveTag(null);
+    setActiveTags([]);
     setTimeMin(0);
     setTimeMax(TIME_SLIDER_MAX);
     setSelectedAllergens([]);
@@ -114,7 +157,7 @@ export default function useRecipeSearch() {
   }
 
   const activeFiltersCount =
-    (activeTag !== null ? 1 : 0) +
+    activeTags.length +
     (timeMin > 0 || timeMax < TIME_SLIDER_MAX ? 1 : 0) +
     selectedAllergens.length;
 
@@ -127,8 +170,9 @@ export default function useRecipeSearch() {
     query,
     setQuery,
     tags,
-    activeTag,
-    setActiveTag,
+    activeTags,
+    toggleTag,
+    clearTags,
     timeMin,
     setTimeMin,
     timeMax,
@@ -138,5 +182,7 @@ export default function useRecipeSearch() {
     resetFilters,
     isFiltering,
     activeFiltersCount,
+    sortBy,
+    setSortBy,
   };
 }

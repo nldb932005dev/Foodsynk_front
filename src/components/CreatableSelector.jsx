@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { normalizeText } from '../utils/normalize';
 
 export default function CreatableSelector({
@@ -13,6 +14,7 @@ export default function CreatableSelector({
   required = false,
   helpText,
 }) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [creating, setCreating] = useState(false);
   const [open, setOpen] = useState(false);
@@ -61,7 +63,7 @@ export default function CreatableSelector({
       setSearch('');
       inputRef.current?.focus();
     } catch {
-      setCreateError('No se pudo crear. Inténtalo de nuevo.');
+      setCreateError(t('errors.createItem'));
     } finally {
       setCreating(false);
     }
@@ -105,7 +107,7 @@ export default function CreatableSelector({
           {required && <span className="text-brand-coral ml-0.5">*</span>}
         </span>
         {atLimit && (
-          <span className="text-xs text-brand-coral ml-1">Máximo {maxItems}</span>
+          <span className="text-xs text-brand-error ml-1">{t('selector.max', { max: maxItems })}</span>
         )}
       </div>
       {helpText && (
@@ -117,7 +119,7 @@ export default function CreatableSelector({
           ref={inputRef}
           type="text"
           className="w-full rounded-xl border border-gray-200 bg-brand-cream/50 px-3 py-2 text-sm outline-none focus:border-brand-green focus:ring-2 focus:ring-brand-green/20 disabled:opacity-50"
-          placeholder={atLimit ? `Límite de ${maxItems} alcanzado` : `Buscar o añadir ${label.toLowerCase()}...`}
+          placeholder={atLimit ? t('selector.limitReached', { max: maxItems }) : t('selector.searchOrAdd', { label: label.toLowerCase() })}
           value={search}
           disabled={creating || atLimit}
           onChange={(e) => { setSearch(e.target.value); setOpen(true); }}
@@ -174,21 +176,21 @@ export default function CreatableSelector({
                     <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border border-brand-green text-brand-green text-xs font-bold">+</span>
                   )}
                   <span>
-                    {creating ? 'Creando...' : <>Crear <strong>"{search.trim()}"</strong></>}
+                    {creating ? t('selector.creating') : <>{t('selector.create')} <strong>"{search.trim()}"</strong></>}
                   </span>
                 </button>
               </>
             )}
 
             {filteredItems.length === 0 && !showCreate && search.length > 0 && (
-              <p className="px-3 py-2 text-xs text-gray-400">Sin resultados</p>
+              <p className="px-3 py-2 text-xs text-gray-400">{t('selector.noResults')}</p>
             )}
           </div>
         )}
       </div>
 
       {createError && (
-        <p className="mt-1 text-xs text-brand-coral">{createError}</p>
+        <p className="mt-1 text-xs text-brand-error">{createError}</p>
       )}
 
       {selected.length > 0 && (
@@ -206,7 +208,7 @@ export default function CreatableSelector({
               >
                 {displayName}
                 {item.isNew && (
-                  <span className="text-brand-green font-bold" title="Recién creado">✦</span>
+                  <span className="text-brand-green font-bold" title={t('selector.justCreated')}>✦</span>
                 )}
                 <button
                   type="button"

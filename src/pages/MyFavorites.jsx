@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/axios";
 import PageHeader from "../components/PageHeader";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -10,6 +11,7 @@ export default function MyFavorites() {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { t } = useTranslation();
 
   useEffect(() => {
     async function load() {
@@ -20,7 +22,7 @@ export default function MyFavorites() {
         const data = res.data?.data ?? res.data;
         setRecipes(Array.isArray(data) ? data : []);
       } catch {
-        setError("No se pudieron cargar tus favoritos.");
+        setError(t("errors.loadFavorites"));
       } finally {
         setLoading(false);
       }
@@ -31,8 +33,8 @@ export default function MyFavorites() {
   return (
     <div>
       <PageHeader
-        title="Mis Favoritos"
-        subtitle="Recetas que has guardado"
+        title={t("recipes.favorites.title")}
+        subtitle={t("recipes.favorites.subtitle")}
       />
 
       {loading && <LoadingSpinner />}
@@ -45,8 +47,8 @@ export default function MyFavorites() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
             </svg>
           }
-          title="Aún no tienes favoritos"
-          subtitle="Guarda recetas desde su página de detalle."
+          title={t("recipes.favorites.emptyTitle")}
+          subtitle={t("recipes.favorites.emptySubtitle")}
         />
       )}
 

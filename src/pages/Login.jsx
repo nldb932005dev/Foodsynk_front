@@ -1,34 +1,46 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { api } from "../api/axios";
 import { useAuth } from "../auth/useAuth";
 import { useNavigate, Navigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import Turnstile from "../components/Turnstile";
+import { getFingerprint } from "../utils/fingerprint";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 
 export default function Login() {
-  const { token, setToken, setUser } = useAuth();
+  const { token, setToken, setUser, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [touched, setTouched] = useState({ email: false, password: false });
+  const [tsToken, setTsToken] = useState("");
+  const [tsResetKey, setTsResetKey] = useState(0);
+  const [hp, setHp] = useState("");
+  const mountedAt = useRef(Date.now());
 
+  if (authLoading) return null;
   if (token) return <Navigate to="/home" replace />;
 
   const normalizedEmail = email.trim().toLowerCase();
   const emailError =
     touched.email && !emailRegex.test(normalizedEmail)
-      ? "Introduce un email valido."
+      ? t("validation.emailInvalid")
       : "";
   const passwordError =
     touched.password && password.length < 6
-      ? "La contrasena debe tener al menos 6 caracteres."
+      ? t("validation.passwordMin")
       : "";
 
   const canSubmit =
-    !loading && emailRegex.test(normalizedEmail) && password.length >= 6;
+    !loading &&
+    !!tsToken &&
+    emailRegex.test(normalizedEmail) &&
+    password.length >= 6;
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -36,22 +48,45 @@ export default function Login() {
     setLoading(true);
 
     try {
+      const fingerprint = await getFingerprint();
       const res = await api.post("/login", {
         email: normalizedEmail,
         password,
+        "cf-turnstile-response": tsToken,
+        website: hp,
+        _elapsed_ms: Date.now() - mountedAt.current,
+        fingerprint,
       });
+
+      // Usuario con 2FA: el backend responde 202 sin token. Vamos al paso
+      // intermedio llevando el token pendiente por router state (es una
+      // credencial efímera: no se guarda en sessionStorage).
+      if (res.status === 202 || res.data.pending_2fa) {
+        navigate("/2fa-challenge", {
+          state: { pendingToken: res.data.pending_token, email: normalizedEmail },
+        });
+        return;
+      }
 
       setToken(res.data.token);
       setUser(res.data.user);
-      navigate("/home");
+      // Admin sin 2FA: entra pero se le lleva a configurarlo (sin loop).
+      if (res.data.force_2fa_setup) {
+        navigate("/mi-cuenta", { state: { promptTwoFactor: true } });
+      } else {
+        navigate("/home");
+      }
     } catch (err) {
+      // El token de Turnstile es de un solo uso: forzar resolver de nuevo.
+      setTsToken("");
+      setTsResetKey((k) => k + 1);
       const status = err?.response?.status;
       if (status === 401 || status === 422) {
-        setError("Credenciales incorrectas. Revisa tu email y contrasena.");
+        setError(t("errors.invalidCredentials"));
       } else if (status === 429) {
-        setError("Demasiados intentos. Espera un momento antes de volver a intentarlo.");
+        setError(t("errors.tooManyAttempts"));
       } else {
-        setError("Error al iniciar sesion. Intentalo de nuevo mas tarde.");
+        setError(t("errors.loginGeneric"));
       }
     } finally {
       setLoading(false);
@@ -71,19 +106,19 @@ export default function Login() {
           <div className="rounded-3xl border border-brand-green-light/50 bg-white p-8 shadow-xl">
             <div className="mb-6">
               <p className="text-xs uppercase tracking-[0.3em] text-brand-green">
-                Foodsynk
+                {t("auth.brandEyebrow")}
               </p>
               <h1 className="mt-2 text-3xl font-semibold leading-tight text-brand-navy">
-                Bienvenida de vuelta
+                {t("auth.login.title")}
               </h1>
               <p className="mt-2 text-sm text-gray-500">
-                Accede a tus recetas y menus.
+                {t("auth.login.subtitle")}
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <label className="block text-sm font-medium text-brand-navy">
-                Email
+                {t("auth.login.email")}
                 <input
                   className="mt-2 w-full rounded-xl border border-gray-200 bg-brand-cream/50 px-4 py-3 text-sm text-brand-navy placeholder:text-gray-400 outline-none transition focus:border-brand-green focus:ring-2 focus:ring-brand-green/20"
                   value={email}
@@ -99,14 +134,14 @@ export default function Login() {
                   required
                 />
                 {emailError && (
-                  <span className="mt-2 block text-xs text-brand-coral">
+                  <span className="mt-2 block text-xs text-brand-error">
                     {emailError}
                   </span>
                 )}
               </label>
 
               <label className="block text-sm font-medium text-brand-navy">
-                Contrasena
+                {t("auth.login.password")}
                 <input
                   className="mt-2 w-full rounded-xl border border-gray-200 bg-brand-cream/50 px-4 py-3 text-sm text-brand-navy placeholder:text-gray-400 outline-none transition focus:border-brand-green focus:ring-2 focus:ring-brand-green/20"
                   value={password}
@@ -121,33 +156,47 @@ export default function Login() {
                   required
                 />
                 {passwordError && (
-                  <span className="mt-2 block text-xs text-brand-coral">
+                  <span className="mt-2 block text-xs text-brand-error">
                     {passwordError}
                   </span>
                 )}
               </label>
 
+              {/* Honeypot anti-bot: invisible para humanos, los bots lo rellenan */}
+              <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                value={hp}
+                onChange={(e) => setHp(e.target.value)}
+                style={{ position: "absolute", left: "-9999px" }}
+                aria-hidden="true"
+              />
+
+              <Turnstile key={tsResetKey} onToken={setTsToken} />
+
               <button
-                className="w-full rounded-xl bg-brand-green px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-green-dark disabled:cursor-not-allowed disabled:bg-gray-300"
+                className="w-full rounded-xl bg-brand-green px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-green-dark disabled:cursor-not-allowed disabled:bg-brand-disabled"
                 disabled={!canSubmit}
               >
-                {loading ? "Entrando..." : "Entrar"}
+                {loading ? t("auth.login.submitting") : t("auth.login.submit")}
               </button>
 
               {error && (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-brand-coral">
+                <div role="alert" className="rounded-xl border border-brand-error/30 bg-brand-error/10 px-4 py-3 text-sm text-brand-error">
                   {error}
                 </div>
               )}
             </form>
 
             <p className="mt-6 text-center text-sm text-gray-500">
-              ¿No tienes cuenta?{" "}
+              {t("auth.login.noAccount")}{" "}
               <Link
                 to="/register"
                 className="font-semibold text-brand-green hover:text-brand-green-dark transition-colors underline underline-offset-2"
               >
-                Registrate
+                {t("auth.login.registerLink")}
               </Link>
             </p>
           </div>
@@ -160,31 +209,30 @@ export default function Login() {
             <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-brand-orange/20 blur-2xl" />
             <div className="relative space-y-4">
               <p className="text-xs uppercase tracking-[0.3em] text-brand-green">
-                Planifica mejor
+                {t("auth.login.infoEyebrow")}
               </p>
               <h2 className="text-2xl font-semibold text-brand-navy">
-                Menus saludables sin complicaciones
+                {t("auth.login.infoTitle")}
               </h2>
               <p className="text-sm text-gray-500">
-                Guarda tus recetas favoritas, crea listas de compra y organiza tu
-                semana en minutos.
+                {t("auth.login.infoText")}
               </p>
               <div className="grid grid-cols-2 gap-3 text-xs text-brand-navy">
                 <div className="rounded-xl border border-brand-green-light/50 bg-white/70 px-3 py-3">
-                  <p className="font-semibold text-brand-green">Recetas</p>
-                  <p className="text-gray-500">Organiza y edita tus platos.</p>
+                  <p className="font-semibold text-brand-green">{t("auth.features.recipes")}</p>
+                  <p className="text-gray-500">{t("auth.features.recipesOrganize")}</p>
                 </div>
                 <div className="rounded-xl border border-brand-green-light/50 bg-white/70 px-3 py-3">
-                  <p className="font-semibold text-brand-green">Listas</p>
-                  <p className="text-gray-500">Compra solo lo que necesitas.</p>
+                  <p className="font-semibold text-brand-green">{t("auth.features.lists")}</p>
+                  <p className="text-gray-500">{t("auth.features.listsNeed")}</p>
                 </div>
                 <div className="rounded-xl border border-brand-green-light/50 bg-white/70 px-3 py-3">
-                  <p className="font-semibold text-brand-green">Menus</p>
-                  <p className="text-gray-500">Planifica tu semana.</p>
+                  <p className="font-semibold text-brand-green">{t("auth.features.menus")}</p>
+                  <p className="text-gray-500">{t("auth.features.menusWeek")}</p>
                 </div>
                 <div className="rounded-xl border border-brand-green-light/50 bg-white/70 px-3 py-3">
-                  <p className="font-semibold text-brand-green">Tiempo</p>
-                  <p className="text-gray-500">Planifica en segundos.</p>
+                  <p className="font-semibold text-brand-green">{t("auth.features.time")}</p>
+                  <p className="text-gray-500">{t("auth.features.timeSeconds")}</p>
                 </div>
               </div>
             </div>

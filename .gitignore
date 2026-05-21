@@ -12,6 +12,17 @@ dist
 dist-ssr
 *.local
 
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Private/internal documentation
+docs/*.docx
+docs/*.pdf
+docs/log*.md
+docs/logs*.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +33,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+/docs/
+/.claude
+/.codex
+/.cursor
+/.continue
+/.gemini
+/.windsurf
+/.roo
+/AGENTS.md
+/CLAUDE.md
+/prompts/
+*.prompt.md

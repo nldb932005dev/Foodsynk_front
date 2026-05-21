@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/axios";
 import { useAuth } from "../auth/useAuth";
 
@@ -7,6 +8,7 @@ export default function RecipeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   // Receta
   const [recipe, setRecipe] = useState(null);
@@ -26,8 +28,9 @@ export default function RecipeDetail() {
   const [newComment, setNewComment] = useState("");
   const [postingComment, setPostingComment] = useState(false);
   const [commentError, setCommentError] = useState("");
+  const [deleteError, setDeleteError] = useState("");
 
-  // ── Carga inicial de la receta ──────────────────────────────────────────────
+  // â”€â”€ Carga inicial de la receta â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     async function load() {
       try {
@@ -40,7 +43,7 @@ export default function RecipeDetail() {
         setFavorited(data.user_favorited ?? false);
         setLikesCount(data.likes_count ?? 0);
       } catch {
-        setError("No se pudo cargar la receta.");
+        setError(t("errors.loadRecipe"));
       } finally {
         setLoading(false);
       }
@@ -48,7 +51,7 @@ export default function RecipeDetail() {
     load();
   }, [id]);
 
-  // ── Carga de comentarios ────────────────────────────────────────────────────
+  // â”€â”€ Carga de comentarios â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     async function loadComments() {
       try {
@@ -57,7 +60,7 @@ export default function RecipeDetail() {
         const data = res.data?.data ?? res.data;
         setComments(Array.isArray(data) ? data : []);
       } catch {
-        // comentarios son no-críticos, silencioso
+        // comentarios son no-crÃ­ticos, silencioso
       } finally {
         setCommentsLoading(false);
       }
@@ -65,28 +68,29 @@ export default function RecipeDetail() {
     loadComments();
   }, [id]);
 
-  // ── Like ────────────────────────────────────────────────────────────────────
+  // â”€â”€ Like â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function toggleLike() {
     if (!user || loadingLike) return;
     setLoadingLike(true);
     try {
       if (liked) {
-        await api.delete(`/recipes/${id}/like`);
+        const res = await api.delete(`/recipes/${id}/like`);
         setLiked(false);
-        setLikesCount((c) => Math.max(0, c - 1));
+        // El backend devuelve el contador real; fallback optimista si no.
+        setLikesCount(res.data?.likes_count ?? Math.max(0, likesCount - 1));
       } else {
-        await api.post(`/recipes/${id}/like`);
+        const res = await api.post(`/recipes/${id}/like`);
         setLiked(true);
-        setLikesCount((c) => c + 1);
+        setLikesCount(res.data?.likes_count ?? likesCount + 1);
       }
     } catch {
-      // silencioso — el contador vuelve al estado correcto en el próximo load
+      // silencioso â€” el contador vuelve al estado correcto en el prÃ³ximo load
     } finally {
       setLoadingLike(false);
     }
   }
 
-  // ── Favorito ────────────────────────────────────────────────────────────────
+  // â”€â”€ Favorito â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function toggleFavorite() {
     if (!user || loadingFav) return;
     setLoadingFav(true);
@@ -99,12 +103,13 @@ export default function RecipeDetail() {
         setFavorited(true);
       }
     } catch {
+      // No interrumpir la experiencia si falla la sincronizacion optimista.
     } finally {
       setLoadingFav(false);
     }
   }
 
-  // ── Comentarios ─────────────────────────────────────────────────────────────
+  // â”€â”€ Comentarios â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function handleCommentSubmit(e) {
     e.preventDefault();
     if (!newComment.trim() || postingComment) return;
@@ -116,21 +121,26 @@ export default function RecipeDetail() {
       setComments((prev) => [comment, ...prev]);
       setNewComment("");
     } catch {
-      setCommentError("No se pudo publicar el comentario. Inténtalo de nuevo.");
+      setCommentError(t("errors.postComment"));
     } finally {
       setPostingComment(false);
     }
   }
 
   async function handleDeleteComment(commentId) {
+    setDeleteError("");
     try {
       await api.delete(`/comments/${commentId}`);
       setComments((prev) => prev.filter((c) => c.id !== commentId));
-    } catch {
+    } catch (err) {
+      const status = err?.response?.status;
+      if (status === 403) setDeleteError(t("errors.deleteCommentForbidden"));
+      else if (status === 404) setDeleteError(t("errors.deleteCommentNotFound"));
+      else setDeleteError(t("errors.deleteCommentGeneric"));
     }
   }
 
-  // ── Estados de carga / error ────────────────────────────────────────────────
+  // â”€â”€ Estados de carga / error â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -149,10 +159,10 @@ export default function RecipeDetail() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
           </svg>
-          Volver
+          {t("common.back")}
         </button>
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error || "Receta no encontrada"}
+        <div className="rounded-xl border border-brand-error/30 bg-brand-error/10 px-4 py-3 text-sm text-brand-error">
+          {error || t("recipes.detail.notFound")}
         </div>
       </div>
     );
@@ -171,7 +181,7 @@ export default function RecipeDetail() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
           </svg>
-          Volver
+          {t("common.back")}
         </button>
 
         {isOwner && (
@@ -182,7 +192,7 @@ export default function RecipeDetail() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
             </svg>
-            Editar receta
+            {t("recipes.detail.editRecipe")}
           </button>
         )}
       </div>
@@ -202,16 +212,16 @@ export default function RecipeDetail() {
 
         <div className="p-6 sm:p-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-brand-navy">
-            {recipe.titulo ?? "Sin titulo"}
+            {recipe.titulo ?? t("recipes.detail.noTitle")}
           </h1>
 
           {/* Like + favorito */}
           <div className="flex items-center gap-3 mt-4">
-            {/* Contador de likes — siempre visible */}
+            {/* Contador de likes â€” siempre visible */}
             <button
               onClick={toggleLike}
               disabled={!user || loadingLike}
-              title={user ? (liked ? "Quitar like" : "Dar like") : "Inicia sesión para dar like"}
+              title={user ? (liked ? t("recipes.detail.removeLike") : t("recipes.detail.addLike")) : t("recipes.detail.loginToLike")}
               className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                 liked
                   ? "bg-brand-coral/10 text-brand-coral"
@@ -224,12 +234,12 @@ export default function RecipeDetail() {
               {likesCount}
             </button>
 
-            {/* Favorito — solo autenticados */}
+            {/* Favorito â€” solo autenticados */}
             {user && (
               <button
                 onClick={toggleFavorite}
                 disabled={loadingFav}
-                title={favorited ? "Quitar de favoritos" : "Guardar en favoritos"}
+                title={favorited ? t("recipes.detail.removeFavorite") : t("recipes.detail.addFavorite")}
                 className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
                   favorited
                     ? "bg-brand-green/10 text-brand-green"
@@ -239,7 +249,7 @@ export default function RecipeDetail() {
                 <svg className="w-4 h-4" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
                 </svg>
-                {favorited ? "Guardada" : "Guardar"}
+                {favorited ? t("recipes.detail.saved") : t("recipes.detail.saveBtn")}
               </button>
             )}
           </div>
@@ -264,7 +274,7 @@ export default function RecipeDetail() {
           {/* Ingredientes */}
           {recipe.ingredients?.length > 0 && (
             <div className="mt-8">
-              <h2 className="text-lg font-semibold text-brand-navy mb-3">Ingredientes</h2>
+              <h2 className="text-lg font-semibold text-brand-navy mb-3">{t("recipes.detail.ingredients")}</h2>
               <ul className="space-y-2">
                 {recipe.ingredients.map((ing, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
@@ -273,7 +283,7 @@ export default function RecipeDetail() {
                       const nombre = typeof ing === "string" ? ing : ing.nombre ?? ing.name;
                       const cantidad = ing.pivot?.cantidad;
                       const unidad = ing.pivot?.unidad_medida;
-                      if (cantidad) return `${cantidad}${unidad ? " " + unidad : ""} de ${nombre}`;
+                      if (cantidad) return t("recipes.detail.ingredientOf", { quantity: cantidad, unit: unidad ? " " + unidad : "", name: nombre });
                       return nombre;
                     })()}
                   </li>
@@ -285,7 +295,7 @@ export default function RecipeDetail() {
           {/* Pasos */}
           {recipe.pasos && (
             <div className="mt-8">
-              <h2 className="text-lg font-semibold text-brand-navy mb-3">Preparación</h2>
+              <h2 className="text-lg font-semibold text-brand-navy mb-3">{t("recipes.detail.preparation")}</h2>
               <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-line leading-relaxed">
                 {recipe.pasos}
               </div>
@@ -294,22 +304,22 @@ export default function RecipeDetail() {
         </div>
       </article>
 
-      {/* Sección de comentarios */}
+      {/* SecciÃ³n de comentarios */}
       <section className="mt-6 bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sm:p-8">
-        <h2 className="text-lg font-semibold text-brand-navy mb-4">Comentarios</h2>
+        <h2 className="text-lg font-semibold text-brand-navy mb-4">{t("recipes.detail.comments")}</h2>
 
-        {/* Formulario — solo autenticados */}
+        {/* Formulario â€” solo autenticados */}
         {user && (
           <form onSubmit={handleCommentSubmit} className="mb-6">
             <textarea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Escribe un comentario..."
+              placeholder={t("recipes.detail.commentPlaceholder")}
               rows={3}
               className="w-full rounded-xl border border-gray-200 bg-brand-cream/50 px-4 py-3 text-sm text-brand-navy placeholder:text-gray-400 focus:border-brand-green focus:outline-none focus:ring-2 focus:ring-brand-green/20 resize-none transition-colors"
             />
             {commentError && (
-              <p className="mt-1 text-xs text-brand-coral">{commentError}</p>
+              <p className="mt-1 text-xs text-brand-error">{commentError}</p>
             )}
             <div className="flex justify-end mt-2">
               <button
@@ -317,7 +327,7 @@ export default function RecipeDetail() {
                 disabled={postingComment || !newComment.trim()}
                 className="rounded-xl bg-brand-green px-4 py-2 text-sm font-semibold text-white hover:bg-brand-green-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {postingComment ? "Publicando..." : "Publicar"}
+                {postingComment ? t("recipes.detail.publishingComment") : t("recipes.detail.publishComment")}
               </button>
             </div>
           </form>
@@ -330,7 +340,7 @@ export default function RecipeDetail() {
           </div>
         ) : comments.length === 0 ? (
           <p className="text-sm text-gray-400 text-center py-4">
-            {user ? "Sé el primero en comentar." : "Sin comentarios todavía."}
+            {user ? t("recipes.detail.beFirst") : t("recipes.detail.noComments")}
           </p>
         ) : (
           <ul className="space-y-4">
@@ -343,15 +353,15 @@ export default function RecipeDetail() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-semibold text-brand-navy">
-                      {comment.user?.name ?? "Usuario"}
+                      {comment.user?.name ?? t("nav.user")}
                     </span>
                     {user?.id === comment.user_id && (
                       <button
                         onClick={() => handleDeleteComment(comment.id)}
                         className="text-xs text-gray-400 hover:text-brand-coral transition-colors flex-shrink-0"
-                        title="Eliminar comentario"
+                        title={t("recipes.detail.deleteComment")}
                       >
-                        Eliminar
+                        {t("recipes.detail.deleteCommentBtn")}
                       </button>
                     )}
                   </div>
@@ -362,16 +372,23 @@ export default function RecipeDetail() {
           </ul>
         )}
 
+        {deleteError && (
+          <p role="alert" className="mt-4 text-sm text-brand-error">
+            {deleteError}
+          </p>
+        )}
+
         {/* CTA para no autenticados */}
         {!user && (
           <p className="mt-4 text-center text-sm text-gray-500">
             <button onClick={() => navigate("/login")} className="text-brand-green font-medium hover:underline">
-              Inicia sesión
+              {t("auth.register.loginLink")}
             </button>{" "}
-            para dejar un comentario.
+            {t("recipes.detail.loginToComment")}
           </p>
         )}
       </section>
     </div>
   );
 }
+

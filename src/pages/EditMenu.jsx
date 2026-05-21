@@ -1,40 +1,53 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/axios";
+
+const COMIDAS_DISPONIBLES = ["desayuno", "almuerzo", "comida", "merienda", "cena"];
 
 export default function EditMenu() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
+  const [menu, setMenu] = useState(null); // datos originales del menÃº
   const [nombre, setNombre] = useState("");
-  const [originalRecipeIds, setOriginalRecipeIds] = useState(new Set());
-  const [selectedRecipes, setSelectedRecipes] = useState([]); // { id, titulo }
-  const [allRecipes, setAllRecipes] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [dias, setDias] = useState(7);
+  const [personas, setPersonas] = useState(4);
+  const [comidas, setComidas] = useState({
+    desayuno: 0,
+    almuerzo: 0,
+    comida: 1,
+    merienda: 0,
+    cena: 1,
+  });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [structureWarning, setStructureWarning] = useState(false);
 
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true);
-        const [menuRes, recipesRes] = await Promise.all([
-          api.get(`/menus/${id}`),
-          api.get("/recipes"),
-        ]);
+        const res = await api.get(`/menus/${id}`);
+        const m = res.data?.data ?? res.data;
+        setMenu(m);
+        setNombre(m.nombre ?? "");
+        setDias(m.dias ?? 7);
+        setPersonas(m.personas ?? 4);
 
-        const menu = menuRes.data?.data ?? menuRes.data;
-        const recipes = recipesRes.data?.data ?? recipesRes.data;
-
-        setNombre(menu.nombre ?? "");
-
-        const menuRecipes = menu.recipes ?? [];
-        setSelectedRecipes(menuRecipes.map((r) => ({ id: r.id, titulo: r.titulo })));
-        setOriginalRecipeIds(new Set(menuRecipes.map((r) => r.id)));
-        setAllRecipes(Array.isArray(recipes) ? recipes : []);
+        if (m.comidas && typeof m.comidas === "object") {
+          // MenÃº con cuestionario: prerellenar comidas con los valores existentes
+          const initial = { desayuno: 0, almuerzo: 0, comida: 0, merienda: 0, cena: 0 };
+          Object.entries(m.comidas).forEach(([k, v]) => {
+            if (Object.prototype.hasOwnProperty.call(initial, k)) initial[k] = v;
+          });
+          setComidas(initial);
+        }
+        // Si m.comidas es null â†’ menÃº viejo â†’ dejar los defaults (comida:1 + cena:1)
       } catch {
-        setError("No se pudo cargar el menú.");
+        setError(t("errors.loadMenu"));
       } finally {
         setLoading(false);
       }
@@ -42,47 +55,55 @@ export default function EditMenu() {
     loadData();
   }, [id]);
 
-  const selectedIds = new Set(selectedRecipes.map((r) => r.id));
+  const comidasActivas = Object.entries(comidas).filter(([, v]) => v > 0);
+  const totalPlatos = dias * comidasActivas.reduce((acc, [, v]) => acc + v, 0);
+  const isOldMenu = menu && menu.comidas === null;
 
-  const suggestions = allRecipes.filter(
-    (r) =>
-      !selectedIds.has(r.id) &&
-      (r.titulo ?? "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  function addRecipe(recipe) {
-    setSelectedRecipes((prev) => [...prev, { id: recipe.id, titulo: recipe.titulo }]);
-    setSearchQuery("");
+  function toggleComida(nombre) {
+    const wasActive = comidas[nombre] > 0;
+    if (menu?.comidas !== null && !isOldMenu && wasActive) {
+      setStructureWarning(true);
+    }
+    setComidas((prev) => ({ ...prev, [nombre]: wasActive ? 0 : 1 }));
   }
 
-  function removeRecipe(recipeId) {
-    setSelectedRecipes((prev) => prev.filter((r) => r.id !== recipeId));
+  function stepComida(nombre, delta) {
+    setComidas((prev) => {
+      const next = (prev[nombre] ?? 0) + delta;
+      return { ...prev, [nombre]: Math.min(3, Math.max(1, next)) };
+    });
   }
+
+  function handleDiasChange(val) {
+    const n = Math.min(30, Math.max(1, parseInt(val, 10) || 1));
+    if (menu?.comidas !== null && !isOldMenu && n < dias) {
+      setStructureWarning(true);
+    }
+    setDias(n);
+  }
+
+  const canSubmit = comidasActivas.length > 0 && dias >= 1;
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!nombre.trim()) return;
+    if (!canSubmit || submitting) return;
     setSubmitting(true);
     setError("");
 
+    const comidasPayload = Object.fromEntries(
+      Object.entries(comidas).filter(([, v]) => v > 0)
+    );
+
     try {
-      // 1. Actualizar nombre
-      await api.put(`/menus/${id}`, { nombre: nombre.trim() });
-
-      // 2. Calcular diff
-      const finalIds = new Set(selectedRecipes.map((r) => r.id));
-      const toAdd = selectedRecipes.filter((r) => !originalRecipeIds.has(r.id));
-      const toRemove = [...originalRecipeIds].filter((rid) => !finalIds.has(rid));
-
-      // 3. Aplicar cambios en paralelo
-      await Promise.all([
-        ...toAdd.map((r) => api.post(`/menus/${id}/recipes`, { recipe_id: r.id })),
-        ...toRemove.map((rid) => api.delete(`/menus/${id}/recipes/${rid}`)),
-      ]);
-
-      navigate("/my-menus");
+      await api.put(`/menus/${id}`, {
+        nombre: nombre.trim() || menu?.nombre,
+        dias,
+        comidas: comidasPayload,
+        personas,
+      });
+      navigate(`/my-menus/${id}/plan`);
     } catch (err) {
-      const msg = err?.response?.data?.message ?? "No se pudo guardar el menú.";
+      const msg = err?.response?.data?.message ?? t("errors.saveMenu");
       setError(msg);
     } finally {
       setSubmitting(false);
@@ -98,24 +119,47 @@ export default function EditMenu() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-xl mx-auto">
       <button
         onClick={() => navigate("/my-menus")}
         className="flex items-center gap-2 text-sm text-brand-green hover:text-brand-green-dark transition-colors mb-6"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+        <svg
+          aria-hidden="true"
+          className="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
+          />
         </svg>
-        Volver a mis menús
+        {t("menus.form.back")}
       </button>
 
-      <h1 className="text-2xl font-bold text-brand-navy mb-6">Editar menú</h1>
+      <h1 className="text-2xl font-bold text-brand-navy mb-1">{t("menus.form.editTitle")}</h1>
+
+      {/* Banner menÃº viejo */}
+      {isOldMenu && (
+        <div className="rounded-xl border border-brand-warning/30 bg-brand-warning/10 px-4 py-3 mb-6">
+          <p className="text-sm font-semibold text-brand-warning">
+            {t("menus.form.oldMenuTitle")}
+          </p>
+          <p className="text-xs text-brand-warning mt-1">
+            {t("menus.form.oldMenuText")}
+          </p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Nombre */}
         <div>
           <label className="block text-sm font-medium text-brand-navy mb-1">
-            Nombre del menú <span className="text-brand-coral">*</span>
+            {t("menus.form.menuName")}
           </label>
           <input
             type="text"
@@ -126,68 +170,161 @@ export default function EditMenu() {
           />
         </div>
 
-        {/* Buscador de recetas */}
+        {/* DÃ­as y personas */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-brand-navy mb-1">
+              {t("menus.form.numDays")}
+            </label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleDiasChange(dias - 1)}
+                className="h-9 w-9 rounded-lg border border-gray-200 text-brand-navy hover:bg-gray-50 transition-colors flex items-center justify-center font-bold"
+              >
+                âˆ’
+              </button>
+              <input
+                type="number"
+                min={1}
+                max={30}
+                value={dias}
+                onChange={(e) => handleDiasChange(e.target.value)}
+                className="w-14 text-center rounded-xl border border-gray-200 bg-white py-2 text-sm font-semibold text-brand-navy focus:border-brand-green focus:outline-none focus:ring-2 focus:ring-brand-green/20"
+              />
+              <button
+                type="button"
+                onClick={() => handleDiasChange(dias + 1)}
+                className="h-9 w-9 rounded-lg border border-gray-200 text-brand-navy hover:bg-gray-50 transition-colors flex items-center justify-center font-bold"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-brand-navy mb-1">
+              {t("menus.form.people")}
+            </label>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPersonas((p) => Math.max(1, p - 1))}
+                className="h-9 w-9 rounded-lg border border-gray-200 text-brand-navy hover:bg-gray-50 transition-colors flex items-center justify-center font-bold"
+              >
+                âˆ’
+              </button>
+              <input
+                type="number"
+                min={1}
+                max={20}
+                value={personas}
+                onChange={(e) =>
+                  setPersonas(Math.min(20, Math.max(1, parseInt(e.target.value, 10) || 1)))
+                }
+                className="w-14 text-center rounded-xl border border-gray-200 bg-white py-2 text-sm font-semibold text-brand-navy focus:border-brand-green focus:outline-none focus:ring-2 focus:ring-brand-green/20"
+              />
+              <button
+                type="button"
+                onClick={() => setPersonas((p) => Math.min(20, p + 1))}
+                className="h-9 w-9 rounded-lg border border-gray-200 text-brand-navy hover:bg-gray-50 transition-colors flex items-center justify-center font-bold"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Aviso de pÃ©rdida de slots al reducir estructura */}
+        {structureWarning && (
+          <div className="rounded-xl border border-brand-warning/30 bg-brand-warning/10 px-4 py-3 text-xs text-brand-warning">
+            {t("menus.form.structureWarning")}
+          </div>
+        )}
+
+        {/* Selector de comidas */}
         <div>
-          <label className="block text-sm font-medium text-brand-navy mb-1">
-            Añadir recetas
-          </label>
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Busca una receta para añadir..."
-            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-brand-navy placeholder:text-gray-400 focus:border-brand-green focus:outline-none focus:ring-2 focus:ring-brand-green/20"
-          />
+          <p className="text-sm font-medium text-brand-navy mb-3">
+            {t("menus.form.whichMeals")}
+          </p>
+          <div className="space-y-3">
+            {COMIDAS_DISPONIBLES.map((clave) => {
+              const activa = comidas[clave] > 0;
+              return (
+                <div key={clave} className="flex items-center gap-4">
+                  <label className="flex items-center gap-2.5 flex-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={activa}
+                      onChange={() => toggleComida(clave)}
+                      className="h-4 w-4 rounded border-gray-300 accent-brand-green cursor-pointer"
+                    />
+                    <span
+                      className={`text-sm font-medium ${
+                        activa ? "text-brand-navy" : "text-gray-400"
+                      }`}
+                    >
+                      {t(`comidas.${clave}`)}
+                    </span>
+                  </label>
 
-          {searchQuery.trim() && suggestions.length > 0 && (
-            <ul className="mt-1 rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden">
-              {suggestions.slice(0, 6).map((r) => (
-                <li key={r.id}>
-                  <button
-                    type="button"
-                    onClick={() => addRecipe(r)}
-                    className="w-full text-left px-4 py-2.5 text-sm text-brand-navy hover:bg-brand-green-light/20 transition-colors"
-                  >
-                    {r.titulo}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+                  {activa && (
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => stepComida(clave, -1)}
+                        disabled={comidas[clave] <= 1}
+                        className="h-7 w-7 rounded-lg border border-gray-200 text-brand-navy hover:bg-gray-50 transition-colors flex items-center justify-center text-xs font-bold disabled:opacity-30"
+                      >
+                        âˆ’
+                      </button>
+                      <span className="w-5 text-center text-sm font-semibold text-brand-navy">
+                        {comidas[clave]}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => stepComida(clave, +1)}
+                        disabled={comidas[clave] >= 3}
+                        className="h-7 w-7 rounded-lg border border-gray-200 text-brand-navy hover:bg-gray-50 transition-colors flex items-center justify-center text-xs font-bold disabled:opacity-30"
+                      >
+                        +
+                      </button>
+                      <span className="text-xs text-gray-400 ml-1">{t("menus.form.dishes")}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
 
-          {searchQuery.trim() && suggestions.length === 0 && (
-            <p className="mt-2 text-xs text-gray-400">Sin resultados para "{searchQuery}".</p>
+          {comidasActivas.length === 0 && (
+            <p className="mt-2 text-xs text-brand-error">
+              {t("validation.selectMeal")}
+            </p>
           )}
         </div>
 
-        {/* Recetas en el menú */}
-        {selectedRecipes.length > 0 && (
-          <div>
-            <p className="text-sm font-medium text-brand-navy mb-2">
-              Recetas en este menú ({selectedRecipes.length})
+        {/* Preview */}
+        {totalPlatos > 0 && (
+          <div className="rounded-xl bg-brand-green/5 border border-brand-green/20 px-4 py-3">
+            <p className="text-sm font-semibold text-brand-green">
+              {t("menus.form.summaryLabel", { count: totalPlatos })}
             </p>
-            <ul className="space-y-2">
-              {selectedRecipes.map((r) => (
-                <li
-                  key={r.id}
-                  className="flex items-center justify-between rounded-xl border border-gray-100 bg-brand-cream/50 px-4 py-2.5"
-                >
-                  <span className="text-sm text-brand-navy">{r.titulo}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeRecipe(r.id)}
-                    className="text-xs text-gray-400 hover:text-brand-coral transition-colors"
-                  >
-                    Quitar
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {t("menus.form.summaryDetail", {
+                count: dias,
+                dias,
+                detail: comidasActivas.map(([c, n]) => `${t(`comidas.${c}`)} (${n})`).join(", "),
+              })}
+            </p>
           </div>
         )}
 
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div
+            role="alert"
+            className="rounded-xl border border-brand-error/30 bg-brand-error/10 px-4 py-3 text-sm text-brand-error"
+          >
             {error}
           </div>
         )}
@@ -198,17 +335,18 @@ export default function EditMenu() {
             onClick={() => navigate("/my-menus")}
             className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
           >
-            Cancelar
+            {t("common.cancel")}
           </button>
           <button
             type="submit"
-            disabled={submitting || !nombre.trim()}
+            disabled={submitting || !canSubmit}
             className="rounded-xl bg-brand-green px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-green-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {submitting ? "Guardando..." : "Guardar cambios"}
+            {submitting ? t("common.saving") : t("menus.form.saveAndPlan")}
           </button>
         </div>
       </form>
     </div>
   );
 }
+

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../api/axios";
 import { AdminTable, ActionBtn } from "./AdminCategories";
 
 export default function AdminIngredients() {
+  const { t } = useTranslation();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -16,7 +18,7 @@ export default function AdminIngredients() {
       const data = res.data?.data ?? res.data;
       setItems(Array.isArray(data) ? data : []);
     } catch {
-      setError("No se pudieron cargar los ingredientes.");
+      setError(t("admin.ingredients.loadError"));
     } finally {
       setLoading(false);
     }
@@ -27,16 +29,16 @@ export default function AdminIngredients() {
       await api.delete(`/admin/ingredients/${id}`);
       setItems((prev) => prev.filter((i) => i.id !== id));
     } catch {
-      setError("No se pudo eliminar el ingrediente.");
+      setError(t("admin.ingredients.deleteError"));
     }
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-brand-navy mb-6">Ingredientes</h1>
+      <h1 className="text-2xl font-bold text-brand-navy mb-6">{t("admin.ingredients.title")}</h1>
 
       {error && (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="mb-4 rounded-xl border border-brand-error/30 bg-brand-error/10 px-4 py-3 text-sm text-brand-error">{error}</div>
       )}
 
       {loading ? (
@@ -46,9 +48,9 @@ export default function AdminIngredients() {
       ) : (
         <AdminTable
           rows={items}
-          cols={[{ label: "Nombre", render: (i) => i.nombre }]}
+          cols={[{ label: t("admin.common.name"), render: (i) => i.nombre }]}
           actions={(i) => (
-            <ActionBtn color="red" onClick={() => handleDelete(i.id)}>Borrar</ActionBtn>
+            <ActionBtn color="red" onClick={() => handleDelete(i.id)}>{t("admin.common.delete")}</ActionBtn>
           )}
         />
       )}

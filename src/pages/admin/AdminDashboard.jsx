@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { api } from "../../api/axios";
 
 function StatCard({ label, value, color = "brand-green" }) {
@@ -13,6 +14,7 @@ function StatCard({ label, value, color = "brand-green" }) {
 }
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState({ users: null, recipes: null, pendingCategories: null, comments: null });
   const [loading, setLoading] = useState(true);
 
@@ -52,7 +54,7 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-brand-navy mb-8">Dashboard</h1>
+      <h1 className="text-2xl font-bold text-brand-navy mb-8">{t("admin.dashboard.title")}</h1>
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -60,10 +62,10 @@ export default function AdminDashboard() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-          <StatCard label="Usuarios registrados" value={stats.users} color="brand-navy" />
-          <StatCard label="Recetas totales"       value={stats.recipes} color="brand-green" />
-          <StatCard label="Categorías pendientes" value={stats.pendingCategories} color="brand-orange" />
-          <StatCard label="Comentarios totales"   value={stats.comments} color="brand-navy" />
+          <StatCard label={t("admin.dashboard.users")} value={stats.users} color="brand-navy" />
+          <StatCard label={t("admin.dashboard.recipes")}       value={stats.recipes} color="brand-green" />
+          <StatCard label={t("admin.dashboard.pendingCategories")} value={stats.pendingCategories} color="brand-orange" />
+          <StatCard label={t("admin.dashboard.comments")}   value={stats.comments} color="brand-navy" />
         </div>
       )}
     </div>

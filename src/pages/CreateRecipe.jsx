@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/axios";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorMessage from "../components/ErrorMessage";
 import CreatableSelector from "../components/CreatableSelector";
+import { UNIDADES } from "../utils/units";
 
 const MAX_TITULO = 150;
 const MAX_PASOS  = 10000;
@@ -21,13 +23,13 @@ function isValidUrl(url) {
 
 export default function CreateRecipe() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // ── Campos del formulario ────────────────────────────────────────────────
   const [titulo, setTitulo] = useState("");
   const [time,   setTime]   = useState("");
   const [pasos,  setPasos]  = useState("");
   const [foto,   setFoto]   = useState("");
-  const [status, setStatus] = useState("draft");
 
   // [{id, name, isNew}] para categorías · [{id, nombre, isNew}] para ingredientes
   const [selectedCategories,  setSelectedCategories]  = useState([]);
@@ -40,9 +42,10 @@ export default function CreateRecipe() {
   const [optionsError,   setOptionsError]   = useState("");
 
   // ── Estado del envío ────────────────────────────────────────────────────
-  const [saving,  setSaving]  = useState(false);
-  const [error,   setError]   = useState("");
-  const [touched, setTouched] = useState({});
+  const [savingAs, setSavingAs] = useState(null); // null | "draft" | "published"
+  const [error,    setError]    = useState("");
+  const [touched,  setTouched]  = useState({});
+  const saving = savingAs !== null;
 
   // ── Carga de categorías e ingredientes ──────────────────────────────────
   useEffect(() => {
@@ -56,7 +59,7 @@ export default function CreateRecipe() {
         setCategories(catRes.data?.data  ?? catRes.data  ?? []);
         setIngredients(ingRes.data?.data ?? ingRes.data  ?? []);
       } catch {
-        setOptionsError("No se pudieron cargar las categorías e ingredientes.");
+        setOptionsError(t("errors.loadOptions"));
       } finally {
         setLoadingOptions(false);
       }
@@ -91,7 +94,7 @@ export default function CreateRecipe() {
     setSelectedIngredients((prev) =>
       prev.some((i) => i.id === item.id)
         ? prev.filter((i) => i.id !== item.id)
-        : [...prev, { id: item.id, nombre: item.nombre, isNew: false }]
+        : [...prev, { id: item.id, nombre: item.nombre, isNew: false, cantidad: '', unidad_medida: '' }]
     );
   }
 
@@ -104,49 +107,56 @@ export default function CreateRecipe() {
     const created = res.data?.data ?? res.data;
     setSelectedIngredients((prev) => [
       ...prev,
-      { id: created.id, nombre: created.nombre, isNew: true },
+      { id: created.id, nombre: created.nombre, isNew: true, cantidad: '', unidad_medida: '' },
     ]);
     setIngredients((prev) => [...prev, created]);
   }
 
-  // ── Validación ──────────────────────────────────────────────────────────
-  const isPublishing = status === "published";
+  function handleIngredientFieldChange(id, field, value) {
+    setSelectedIngredients((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, [field]: value } : i))
+    );
+  }
 
+  // ── Validación ──────────────────────────────────────────────────────────
   const fotoError =
     touched.foto && foto && !isValidUrl(foto)
-      ? "La URL no es válida (debe empezar por http:// o https://)."
+      ? t("validation.urlInvalid")
       : "";
 
-  const publishErrors = isPublishing ? [
-    ...(!titulo.trim()                    ? ["El título es obligatorio."]                  : []),
-    ...(!pasos.trim()                     ? ["Los pasos de preparación son obligatorios."] : []),
-    ...(!time || parseInt(time, 10) <= 0  ? ["El tiempo de preparación es obligatorio."]  : []),
-    ...(selectedCategories.length === 0   ? ["Añade al menos una categoría."]              : []),
-  ] : [];
+  const publishErrors = [
+    ...(!titulo.trim()                    ? [t("recipes.form.errTitleRequired")]    : []),
+    ...(!pasos.trim()                     ? [t("recipes.form.errStepsRequired")]    : []),
+    ...(!time || parseInt(time, 10) <= 0  ? [t("recipes.form.errTimeRequired")]     : []),
+    ...(selectedCategories.length === 0   ? [t("recipes.form.errCategoryRequired")] : []),
+  ];
 
-  const missingForPublish = publishErrors.length > 0;
-  const canSubmit = !saving && !fotoError && !missingForPublish;
+  const canPublish = !saving && !fotoError && publishErrors.length === 0;
 
   // ── Envío ────────────────────────────────────────────────────────────────
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleSave(targetStatus) {
+    if (saving) return;
     setError("");
 
     if (foto && !isValidUrl(foto)) {
-      setError("La URL de la foto no es válida.");
+      setError(t("errors.photoUrlInvalid"));
       return;
     }
 
-    setSaving(true);
+    setSavingAs(targetStatus);
     try {
       await api.post("/recipes", {
         titulo:       titulo.trim()  || null,
         time:         time ? parseInt(time, 10) : null,
         pasos:        pasos.trim()   || null,
         foto:         foto.trim()    || null,
-        status,
+        status:       targetStatus,
         category_ids: selectedCategories.map((c) => c.id),
-        ingredients:  selectedIngredients.map((i) => ({ id: i.id })),
+        ingredients:  selectedIngredients.map((i) => ({
+          id: i.id,
+          cantidad: i.cantidad || null,
+          unidad_medida: i.unidad_medida || null,
+        })),
       });
 
       navigate("/my-recipes");
@@ -158,20 +168,20 @@ export default function CreateRecipe() {
           const first = Object.values(errors)[0];
           setError(Array.isArray(first) ? first[0] : String(first));
         } else {
-          setError("Datos incorrectos. Revisa los campos e inténtalo de nuevo.");
+          setError(t("errors.formData"));
         }
       } else if (status422 === 429) {
-        setError("Demasiados intentos. Espera un momento.");
+        setError(t("errors.tooManyAttemptsShort"));
       } else {
-        setError("Error al guardar la receta. Inténtalo de nuevo.");
+        setError(t("errors.saveRecipe"));
       }
     } finally {
-      setSaving(false);
+      setSavingAs(null);
     }
   }
 
   // ── Render ───────────────────────────────────────────────────────────────
-  if (loadingOptions) return <LoadingSpinner text="Cargando opciones..." />;
+  if (loadingOptions) return <LoadingSpinner text={t("common.loadingOptions")} />;
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -183,7 +193,7 @@ export default function CreateRecipe() {
         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
         </svg>
-        Volver a Mis Recetas
+        {t("recipes.form.backToMine")}
       </button>
 
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sm:p-8">
@@ -195,18 +205,29 @@ export default function CreateRecipe() {
             </svg>
           </div>
           <div>
-            <h1 className="text-xl font-bold text-brand-navy">Nueva receta</h1>
-            <p className="text-sm text-gray-500">Rellena los campos y guarda o publica</p>
+            <h1 className="text-xl font-bold text-brand-navy">{t("recipes.form.newTitle")}</h1>
+            <p className="text-sm text-gray-500">{t("recipes.form.newSubtitle")}</p>
           </div>
         </div>
 
         {optionsError && <ErrorMessage message={optionsError} />}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (canPublish) handleSave("published");
+          }}
+          className="space-y-5"
+        >
+          {/* Submit oculto: habilita el envío implícito al pulsar Enter en un input.
+              Los botones visibles son type="button" para evitar el race condition entre
+              setState y submit (ver F-PUBLISH-FIX.1). */}
+          <button type="submit" tabIndex={-1} aria-hidden="true" className="hidden" />
+
           {/* Título */}
           <label className="block">
             <span className="text-sm font-medium text-brand-navy">
-              Título {isPublishing && <span className="text-brand-coral">*</span>}
+              {t("recipes.form.title")} <span className="text-brand-coral">*</span>
             </span>
             <input
               type="text"
@@ -215,7 +236,7 @@ export default function CreateRecipe() {
               onChange={(e) => setTitulo(e.target.value.trimStart())}
               onBlur={() => setTouched((t) => ({ ...t, titulo: true }))}
               maxLength={MAX_TITULO}
-              placeholder="Nombre de la receta"
+              placeholder={t("recipes.form.titlePlaceholder")}
             />
             <span className="text-xs text-gray-400 mt-1 block text-right">
               {titulo.length}/{MAX_TITULO}
@@ -225,7 +246,7 @@ export default function CreateRecipe() {
           {/* Tiempo (minutos) */}
           <label className="block">
             <span className="text-sm font-medium text-brand-navy">
-              Tiempo de preparación (minutos) {isPublishing && <span className="text-brand-coral">*</span>}
+              {t("recipes.form.prepTime")} <span className="text-brand-coral">*</span>
             </span>
             <input
               type="number"
@@ -235,13 +256,13 @@ export default function CreateRecipe() {
               value={time}
               onChange={(e) => setTime(e.target.value)}
               onBlur={() => setTouched((t) => ({ ...t, time: true }))}
-              placeholder="Ej: 30"
+              placeholder={t("recipes.form.prepTimePlaceholder")}
             />
           </label>
 
           {/* URL foto */}
           <label className="block">
-            <span className="text-sm font-medium text-brand-navy">URL de la imagen</span>
+            <span className="text-sm font-medium text-brand-navy">{t("recipes.form.imageUrl")}</span>
             <input
               type="url"
               className={`mt-1.5 w-full rounded-xl border bg-brand-cream/50 px-4 py-3 text-sm text-brand-navy placeholder:text-gray-400 outline-none transition focus:ring-2 ${
@@ -253,17 +274,17 @@ export default function CreateRecipe() {
               onChange={(e) => setFoto(e.target.value.replace(/\s+/g, ""))}
               onBlur={() => setTouched((t) => ({ ...t, foto: true }))}
               maxLength={MAX_FOTO}
-              placeholder="https://ejemplo.com/imagen.jpg"
+              placeholder={t("recipes.form.imageUrlPlaceholder")}
             />
             {fotoError && (
-              <span className="mt-1 block text-xs text-brand-coral">{fotoError}</span>
+              <span className="mt-1 block text-xs text-brand-error">{fotoError}</span>
             )}
           </label>
 
           {/* Pasos */}
           <label className="block">
             <span className="text-sm font-medium text-brand-navy">
-              Pasos de preparación {isPublishing && <span className="text-brand-coral">*</span>}
+              {t("recipes.form.steps")} <span className="text-brand-coral">*</span>
             </span>
             <textarea
               className="mt-1.5 w-full rounded-xl border border-gray-200 bg-brand-cream/50 px-4 py-3 text-sm text-brand-navy placeholder:text-gray-400 outline-none transition focus:border-brand-green focus:ring-2 focus:ring-brand-green/20 resize-y min-h-[120px]"
@@ -271,7 +292,7 @@ export default function CreateRecipe() {
               onChange={(e) => setPasos(e.target.value.substring(0, MAX_PASOS))}
               onBlur={() => setTouched((t) => ({ ...t, pasos: true }))}
               rows={6}
-              placeholder="Describe los pasos para preparar la receta..."
+              placeholder={t("recipes.form.stepsPlaceholder")}
             />
             <span className="text-xs text-gray-400 mt-1 block text-right">
               {pasos.length}/{MAX_PASOS}
@@ -280,7 +301,7 @@ export default function CreateRecipe() {
 
           {/* Categorías */}
           <CreatableSelector
-            label="Categorías"
+            label={t("recipes.form.categories")}
             items={categories}
             selected={selectedCategories}
             onSelect={handleSelectCategory}
@@ -288,13 +309,13 @@ export default function CreateRecipe() {
             onRemove={handleRemoveCategory}
             nameField="name"
             maxItems={15}
-            required={isPublishing}
-            helpText="Opcional si guardas como borrador · Obligatoria si publicas (mínimo 1)"
+            required
+            helpText={t("recipes.form.categoriesHelp")}
           />
 
           {/* Ingredientes */}
           <CreatableSelector
-            label="Ingredientes"
+            label={t("recipes.form.ingredients")}
             items={ingredients}
             selected={selectedIngredients}
             onSelect={handleSelectIngredient}
@@ -302,16 +323,53 @@ export default function CreateRecipe() {
             onRemove={handleRemoveIngredient}
             nameField="nombre"
             maxItems={30}
-            helpText="Opcional"
+            helpText={t("recipes.form.ingredientsHelp")}
           />
+
+          {/* Cantidades por ingrediente */}
+          {selectedIngredients.length > 0 && (
+            <div className="mt-3 space-y-2">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                {t("recipes.form.quantityPerIngredient")}
+              </p>
+              {selectedIngredients.map((ing) => (
+                <div key={ing.id} className="flex items-center gap-2">
+                  <span className="text-sm text-brand-navy w-32 truncate shrink-0">{ing.nombre}</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="9999"
+                    inputMode="decimal"
+                    value={ing.cantidad}
+                    placeholder={t("recipes.form.quantityPlaceholder")}
+                    onChange={(e) => handleIngredientFieldChange(ing.id, 'cantidad', e.target.value)}
+                    className="w-24 rounded-lg border border-gray-200 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-green/30"
+                    aria-label={t("recipes.form.quantityOf", { name: ing.nombre })}
+                  />
+                  <select
+                    value={ing.unidad_medida}
+                    onChange={(e) => handleIngredientFieldChange(ing.id, 'unidad_medida', e.target.value)}
+                    className="w-32 rounded-lg border border-gray-200 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-green/30"
+                    aria-label={t("recipes.form.unitOf", { name: ing.nombre })}
+                  >
+                    <option value="">—</option>
+                    {UNIDADES.map((u) => (
+                      <option key={u.value} value={u.value}>{t(`units.${u.value}`)}</option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Errores de validación para publicar */}
           {publishErrors.length > 0 && (
             <div role="alert" className="rounded-xl border border-brand-coral/30 bg-brand-coral/5 px-4 py-3">
-              <p className="text-xs font-semibold text-brand-coral mb-1">Para publicar necesitas:</p>
+              <p className="text-xs font-semibold text-brand-error mb-1">{t("recipes.form.needToPublish")}</p>
               <ul className="list-disc list-inside space-y-0.5">
                 {publishErrors.map((err, i) => (
-                  <li key={i} className="text-xs text-brand-coral">{err}</li>
+                  <li key={i} className="text-xs text-brand-error">{err}</li>
                 ))}
               </ul>
             </div>
@@ -326,23 +384,23 @@ export default function CreateRecipe() {
               onClick={() => navigate("/my-recipes")}
               className="flex-1 rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
             >
-              Cancelar
+              {t("common.cancel")}
             </button>
             <button
-              type="submit"
-              disabled={saving || fotoError}
-              onClick={() => setStatus("draft")}
+              type="button"
+              disabled={saving}
+              onClick={() => handleSave("draft")}
               className="flex-1 rounded-xl border border-brand-green px-4 py-3 text-sm font-semibold text-brand-green hover:bg-brand-green/5 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {saving && status === "draft" ? "Guardando..." : "Guardar borrador"}
+              {savingAs === "draft" ? t("recipes.form.savingDraft") : t("recipes.form.saveDraft")}
             </button>
             <button
-              type="submit"
-              disabled={!canSubmit}
-              onClick={() => setStatus("published")}
-              className="flex-1 rounded-xl bg-brand-green px-4 py-3 text-sm font-semibold text-white hover:bg-brand-green-dark transition-colors disabled:cursor-not-allowed disabled:bg-gray-300"
+              type="button"
+              disabled={!canPublish}
+              onClick={() => handleSave("published")}
+              className="flex-1 rounded-xl bg-brand-green px-4 py-3 text-sm font-semibold text-white hover:bg-brand-green-dark transition-colors disabled:cursor-not-allowed disabled:bg-brand-disabled"
             >
-              {saving && status === "published" ? "Publicando..." : "Publicar"}
+              {savingAs === "published" ? t("recipes.form.publishing") : t("recipes.form.publish")}
             </button>
           </div>
         </form>

@@ -1,4 +1,8 @@
-export default function SearchBar({ value, onChange, placeholder = "Buscar recetas..." }) {
+import { useTranslation } from "react-i18next";
+
+export default function SearchBar({ value, onChange, placeholder }) {
+  const { t } = useTranslation();
+  const ph = placeholder ?? t("search.placeholder");
   return (
     <div className="relative">
       <svg
@@ -16,8 +20,8 @@ export default function SearchBar({ value, onChange, placeholder = "Buscar recet
         type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        aria-label={placeholder}
+        placeholder={ph}
+        aria-label={ph}
         className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-4 text-sm text-brand-navy placeholder:text-gray-400 focus:border-brand-green focus:outline-none focus:ring-2 focus:ring-brand-green/20 transition-colors"
       />
     </div>

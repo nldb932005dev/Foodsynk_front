@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { api } from "../api/axios";
 import PageHeader from "../components/PageHeader";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -13,6 +14,7 @@ export default function MyRecipes() {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const { t } = useTranslation();
 
   // Delete state
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -30,7 +32,7 @@ export default function MyRecipes() {
       const data = res.data?.data ?? res.data;
       setRecipes(Array.isArray(data) ? data : []);
     } catch {
-      setError("No se pudieron cargar tus recetas.");
+      setError(t("errors.loadRecipes"));
     } finally {
       setLoading(false);
     }
@@ -49,9 +51,9 @@ export default function MyRecipes() {
     } catch (err) {
       const status = err?.response?.status;
       if (status === 422) {
-        setError("Esta receta necesita más información antes de publicarse (título, pasos...).");
+        setError(t("errors.publishNeedsInfo"));
       } else {
-        setError("No se pudo publicar la receta. Inténtalo de nuevo.");
+        setError(t("errors.publishFailed"));
       }
     }
   }
@@ -71,13 +73,13 @@ export default function MyRecipes() {
     } catch (err) {
       const status = err?.response?.status;
       if (status === 403) {
-        setError("No tienes permiso para eliminar esta receta.");
+        setError(t("errors.noPermissionDeleteRecipe"));
       } else if (status === 404) {
         // Already deleted, remove from list
         setRecipes((prev) => prev.filter((r) => r.id !== deleteTarget.id));
         setDeleteTarget(null);
       } else {
-        setError("Error al eliminar la receta. Intentalo de nuevo.");
+        setError(t("errors.deleteRecipe"));
       }
     } finally {
       setDeleting(false);
@@ -88,8 +90,8 @@ export default function MyRecipes() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <PageHeader
-          title="Mis Recetas"
-          subtitle="Recetas creadas por ti"
+          title={t("recipes.mine.title")}
+          subtitle={t("recipes.mine.subtitle")}
         />
         <button
           onClick={() => navigate("/my-recipes/create")}
@@ -98,7 +100,7 @@ export default function MyRecipes() {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
-          Nueva receta
+          {t("recipes.mine.newRecipe")}
         </button>
       </div>
 
@@ -112,8 +114,8 @@ export default function MyRecipes() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
             </svg>
           }
-          title="No tienes recetas todavia"
-          subtitle="Las recetas que crees apareceran aqui"
+          title={t("recipes.mine.emptyTitle")}
+          subtitle={t("recipes.mine.emptySubtitle")}
         />
       )}
 
@@ -130,10 +132,10 @@ export default function MyRecipes() {
       {/* Delete confirmation modal */}
       <ConfirmModal
         open={!!deleteTarget}
-        title="Eliminar receta"
-        message={`¿Estas seguro de que quieres eliminar "${deleteTarget?.titulo ?? "esta receta"}"? Esta accion no se puede deshacer.`}
-        confirmText="Eliminar"
-        cancelText="Cancelar"
+        title={t("recipes.mine.deleteTitle")}
+        message={t("recipes.mine.deleteMessage", { name: deleteTarget?.titulo ?? t("recipes.mine.deleteThisRecipe") })}
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteTarget(null)}
         loading={deleting}

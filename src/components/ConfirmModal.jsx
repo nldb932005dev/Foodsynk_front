@@ -1,5 +1,11 @@
-export default function ConfirmModal({ open, title, message, confirmText = "Eliminar", cancelText = "Cancelar", onConfirm, onCancel, loading = false }) {
+import { useTranslation } from "react-i18next";
+
+export default function ConfirmModal({ open, title, message, confirmText, cancelText, onConfirm, onCancel, loading = false }) {
+  const { t } = useTranslation();
   if (!open) return null;
+
+  const confirmLabel = confirmText ?? t("common.delete");
+  const cancelLabel = cancelText ?? t("common.cancel");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -34,14 +40,14 @@ export default function ConfirmModal({ open, title, message, confirmText = "Elim
             disabled={loading}
             className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
-            {cancelText}
+            {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="flex-1 rounded-xl bg-brand-coral px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+            className="flex-1 rounded-xl bg-brand-coral px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-error transition-colors disabled:opacity-50"
           >
-            {loading ? "Eliminando..." : confirmText}
+            {loading ? t("common.deleting") : confirmLabel}
           </button>
         </div>
       </div>

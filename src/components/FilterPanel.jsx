@@ -1,23 +1,25 @@
-import { useState } from "react";
+﻿import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
-export const ALLERGENS = [
-  { id: "gluten",       label: "Gluten" },
-  { id: "lacteos",      label: "Lácteos" },
-  { id: "huevo",        label: "Huevo" },
-  { id: "pescado",      label: "Pescado" },
-  { id: "marisco",      label: "Marisco" },
-  { id: "frutos_secos", label: "Frutos secos" },
-  { id: "cacahuetes",   label: "Cacahuetes" },
-  { id: "soja",         label: "Soja" },
-  { id: "sesamo",       label: "Sésamo" },
-  { id: "mostaza",      label: "Mostaza" },
-  { id: "apio",         label: "Apio" },
-  { id: "altramuces",   label: "Altramuces" },
-  { id: "moluscos",     label: "Moluscos" },
-  { id: "sulfitos",     label: "Sulfitos" },
+const ALLERGENS = [
+  { id: "gluten" },
+  { id: "lacteos" },
+  { id: "huevo" },
+  { id: "pescado" },
+  { id: "marisco" },
+  { id: "frutos_secos" },
+  { id: "cacahuetes" },
+  { id: "soja" },
+  { id: "sesamo" },
+  { id: "mostaza" },
+  { id: "apio" },
+  { id: "altramuces" },
+  { id: "moluscos" },
+  { id: "sulfitos" },
 ];
 
 function TimeRangeSlider({ min, max, minVal, maxVal, onMinChange, onMaxChange }) {
+  const { t } = useTranslation();
   const minPercent = ((minVal - min) / (max - min)) * 100;
   const maxPercent = ((maxVal - min) / (max - min)) * 100;
 
@@ -48,7 +50,7 @@ function TimeRangeSlider({ min, max, minVal, maxVal, onMinChange, onMaxChange })
           style={{ left: `${maxPercent}%` }}
           aria-hidden="true"
         />
-        {/* Min range input — invisible, interactive */}
+        {/* Min range input â€” invisible, interactive */}
         <input
           type="range"
           min={min}
@@ -57,9 +59,9 @@ function TimeRangeSlider({ min, max, minVal, maxVal, onMinChange, onMaxChange })
           onChange={(e) => onMinChange(Math.min(Number(e.target.value), maxVal - 5))}
           className="absolute inset-0 w-full cursor-pointer opacity-0"
           style={{ zIndex: minVal > max - 15 ? 5 : 3 }}
-          aria-label={`Tiempo mínimo: ${minVal} minutos`}
+          aria-label={t("filters.minMinutes", { value: minVal })}
         />
-        {/* Max range input — invisible, interactive */}
+        {/* Max range input â€” invisible, interactive */}
         <input
           type="range"
           min={min}
@@ -68,19 +70,19 @@ function TimeRangeSlider({ min, max, minVal, maxVal, onMinChange, onMaxChange })
           onChange={(e) => onMaxChange(Math.max(Number(e.target.value), minVal + 5))}
           className="absolute inset-0 w-full cursor-pointer opacity-0"
           style={{ zIndex: 4 }}
-          aria-label={`Tiempo máximo: ${maxVal} minutos`}
+          aria-label={t("filters.maxMinutes", { value: maxVal })}
         />
       </div>
 
       {/* Value labels */}
       <div className="flex items-center justify-between gap-2 mt-1">
         <div className="flex-1 text-center rounded-lg border border-gray-200 bg-white py-1.5">
-          <span className="text-xs font-semibold text-brand-navy">{minVal} min</span>
+          <span className="text-xs font-semibold text-brand-navy">{t("filters.minLabel", { value: minVal })}</span>
         </div>
-        <span className="text-xs text-gray-400" aria-hidden="true">—</span>
+        <span className="text-xs text-gray-400" aria-hidden="true">â€”</span>
         <div className="flex-1 text-center rounded-lg border border-gray-200 bg-white py-1.5">
           <span className="text-xs font-semibold text-brand-navy">
-            {maxVal >= max ? `${max}+ min` : `${maxVal} min`}
+            {maxVal >= max ? t("filters.maxLabelPlus", { value: max }) : t("filters.minLabel", { value: maxVal })}
           </span>
         </div>
       </div>
@@ -90,8 +92,9 @@ function TimeRangeSlider({ min, max, minVal, maxVal, onMinChange, onMaxChange })
 
 export default function FilterPanel({
   tags,
-  activeTag,
-  onTagClick,
+  activeTags,
+  onTagToggle,
+  onTagsClear,
   timeMin,
   timeMax,
   setTimeMin,
@@ -103,6 +106,7 @@ export default function FilterPanel({
   activeFiltersCount,
 }) {
   const [allergensOpen, setAllergensOpen] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-5">
@@ -122,7 +126,7 @@ export default function FilterPanel({
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
-          Limpiar filtros ({activeFiltersCount})
+          {t("filters.clear", { count: activeFiltersCount })}
         </button>
       )}
 
@@ -132,27 +136,27 @@ export default function FilterPanel({
           id="filter-cat-heading"
           className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3"
         >
-          Categoría
+          {t("filters.category")}
         </h3>
         <div className="flex flex-wrap gap-1.5" role="group" aria-labelledby="filter-cat-heading">
           <button
-            onClick={() => onTagClick(null)}
-            aria-pressed={activeTag === null}
+            onClick={onTagsClear}
+            aria-pressed={activeTags.length === 0}
             className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-green ${
-              activeTag === null
+              activeTags.length === 0
                 ? "bg-brand-green text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
-            Todas
+            {t("filters.all")}
           </button>
           {tags.map((tag) => (
             <button
               key={tag}
-              onClick={() => onTagClick(activeTag === tag ? null : tag)}
-              aria-pressed={activeTag === tag}
+              onClick={() => onTagToggle(tag)}
+              aria-pressed={activeTags.includes(tag)}
               className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-green ${
-                activeTag === tag
+                activeTags.includes(tag)
                   ? "bg-brand-green text-white"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
@@ -171,7 +175,7 @@ export default function FilterPanel({
           id="filter-time-heading"
           className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-1"
         >
-          Tiempo de preparación
+          {t("filters.prepTime")}
         </h3>
         <TimeRangeSlider
           min={0}
@@ -195,7 +199,7 @@ export default function FilterPanel({
           className="w-full flex items-center gap-2 rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-green"
         >
           <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-            Sin alérgenos
+            {t("filters.noAllergens")}
           </span>
           {selectedAllergens.length > 0 && (
             <span className="text-xs font-semibold text-brand-green bg-brand-green/10 rounded-full px-2 py-0.5">
@@ -218,10 +222,10 @@ export default function FilterPanel({
 
         <div id="allergens-list" hidden={!allergensOpen} className="mt-3">
           <p className="text-xs text-gray-400 mb-3">
-            Excluir recetas que puedan contener:
+            {t("filters.excludeRecipes")}
           </p>
           <div className="space-y-2.5">
-            {ALLERGENS.map(({ id, label }) => (
+            {ALLERGENS.map(({ id }) => (
               <label key={id} className="flex items-center gap-3 cursor-pointer group">
                 <input
                   type="checkbox"
@@ -230,7 +234,7 @@ export default function FilterPanel({
                   className="w-4 h-4 rounded border-gray-300 accent-brand-green cursor-pointer focus:ring-2 focus:ring-brand-green"
                 />
                 <span className="text-sm text-gray-700 group-hover:text-brand-navy transition-colors leading-none">
-                  {label}
+                  {t(`allergens.${id}`)}
                 </span>
               </label>
             ))}
@@ -240,3 +244,4 @@ export default function FilterPanel({
     </div>
   );
 }
+
