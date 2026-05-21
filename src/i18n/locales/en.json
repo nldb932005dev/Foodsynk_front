@@ -140,6 +140,7 @@
     "loginGeneric": "Login failed. Please try again later.",
     "registerData": "Incorrect data. Check the fields and try again.",
     "registerGeneric": "Could not create the account. Please try again later.",
+    "passwordPwnedFriendly": "That password appears in public databases of passwords stolen in breaches of other websites, not Foodsynk. For your security, choose one you have never used anywhere else.",
     "formData": "Incorrect data. Check the fields and try again.",
     "loadOptions": "Could not load categories and ingredients.",
     "photoUrlInvalid": "The photo URL is not valid.",
@@ -163,6 +164,9 @@
     "loadShoppingList": "Could not load the shopping list.",
     "loadWeeklyPlan": "Could not load the weekly plan. The server may need to be updated.",
     "postComment": "Could not post the comment. Please try again.",
+    "deleteCommentForbidden": "You don't have permission to delete this comment.",
+    "deleteCommentNotFound": "This comment no longer exists.",
+    "deleteCommentGeneric": "Could not delete the comment. Please try again.",
     "createItem": "Could not create it. Please try again.",
     "saveProfile": "Could not save the changes.",
     "changePassword": "Could not change the password.",
@@ -195,12 +199,18 @@
       "viewN_other": "View {{count}} recipes",
       "ctaTitle": "Sign up to save your own recipes",
       "ctaText": "Create, organize and manage your favorite recipes.",
-      "ctaButton": "Create free account"
+      "ctaButton": "Create free account",
+      "sortLabel": "Sort:",
+      "sortRecent": "Newest",
+      "sortPopular": "Most popular"
     },
     "home": {
       "title": "All recipes",
       "subtitle": "Browse all available recipes",
-      "empty": "No recipes yet"
+      "empty": "No recipes yet",
+      "sortLabel": "Sort by:",
+      "sortRecent": "Newest",
+      "sortPopular": "Most popular"
     },
     "mine": {
       "title": "My Recipes",
@@ -226,7 +236,9 @@
       "moreCount": "+{{count}} more",
       "draft": "Draft",
       "published": "Published",
-      "publish": "Publish recipe"
+      "publish": "Publish recipe",
+      "likes": "{{count}} like",
+      "likes_other": "{{count}} likes"
     },
     "form": {
       "backToMine": "Back to My Recipes",
@@ -359,7 +371,8 @@
     "bought": "Bought",
     "boughtCount": "{{done}} of {{total}} ingredients bought",
     "fileHeader": "Shopping list — {{name}}",
-    "filePeople": "For {{count}} people"
+    "filePeople": "For {{count}} people",
+    "allBought": "Nothing pending to copy."
   },
   "account": {
     "title": "My account",
@@ -734,5 +747,10 @@
       "noResults": "No access records match the filters.",
       "csvReason": "Reason"
     }
+  },
+  "footer": {
+    "license": "License CC BY-NC-ND 4.0",
+    "safeCreative": "Safe Creative ID 2605175683942",
+    "contact": "Contact"
   }
 }

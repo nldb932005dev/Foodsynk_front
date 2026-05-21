@@ -15,6 +15,7 @@ export default function ShoppingList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [copyMessage, setCopyMessage] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -77,6 +78,9 @@ export default function ShoppingList() {
     load();
   }, [id]);
 
+  const pending = ingredients.filter((ing) => !checked[ing.key]);
+  const done = ingredients.filter((ing) => checked[ing.key]);
+
   function toggleCheck(key) {
     setChecked((prev) => ({ ...prev, [key]: !prev[key] }));
   }
@@ -86,19 +90,25 @@ export default function ShoppingList() {
       const cantidad = Number.isInteger(ing.totalCantidad)
         ? ing.totalCantidad
         : ing.totalCantidad.toFixed(1);
-      return `${ing.label} — ${cantidad}${ing.unidad ? " " + ing.unidad : ""}`;
+      return `${ing.label} - ${cantidad}${ing.unidad ? " " + ing.unidad : ""}`;
     }
     return ing.label;
   }
 
   function handleDownload() {
+    if (pending.length === 0) {
+      setCopyMessage(t("shopping.allBought"));
+      setTimeout(() => setCopyMessage(""), 2000);
+      return;
+    }
+
     const nombreMenu = menu?.nombre ?? 'menu';
     const fecha = new Date().toISOString().slice(0, 10);
     const filename = `lista-compra-${nombreMenu.toLowerCase().replace(/\s+/g, '-')}-${fecha}.txt`;
     const header = `${t("shopping.fileHeader", { name: menu?.nombre ?? t("shopping.menuFallback") })}\n`;
     const subheader = menu?.personas ? `${t("shopping.filePeople", { count: menu.personas })}\n` : '';
-    const separator = '─'.repeat(40) + '\n';
-    const items = ingredients.map(ing => `• ${getDisplayLabel(ing)}`).join('\n');
+    const separator = '-'.repeat(40) + '\n';
+    const items = pending.map(ing => `* ${getDisplayLabel(ing)}`).join('\n');
     const blob = new Blob([header + subheader + separator + items], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -108,7 +118,13 @@ export default function ShoppingList() {
   }
 
   async function handleCopy() {
-    const text = ingredients.map((ing) => `- ${getDisplayLabel(ing)}`).join("\n");
+    if (pending.length === 0) {
+      setCopyMessage(t("shopping.allBought"));
+      setTimeout(() => setCopyMessage(""), 2000);
+      return;
+    }
+
+    const text = pending.map((ing) => `- ${getDisplayLabel(ing)}`).join("\n");
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -117,9 +133,6 @@ export default function ShoppingList() {
       // Clipboard no disponible en algunos contextos
     }
   }
-
-  const pending = ingredients.filter((ing) => !checked[ing.key]);
-  const done = ingredients.filter((ing) => checked[ing.key]);
 
   if (loading) {
     return (
@@ -182,7 +195,7 @@ export default function ShoppingList() {
                 d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"
               />
             </svg>
-            {copied ? t("shopping.copied") : t("shopping.copy")}
+            {copyMessage || (copied ? t("shopping.copied") : t("shopping.copy"))}
           </button>
           <button
             onClick={handleDownload}

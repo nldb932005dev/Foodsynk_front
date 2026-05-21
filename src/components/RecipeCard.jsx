@@ -80,6 +80,16 @@ export default function RecipeCard({ recipe, showActions = false, onEdit, onDele
             {recipe.status === "draft" ? t("recipes.card.draft") : t("recipes.card.published")}
           </span>
         )}
+
+        <span
+          className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-white/90 backdrop-blur-sm px-2 py-0.5 text-xs font-semibold text-brand-coral shadow-sm border border-gray-100"
+          aria-label={t("recipes.card.likes", { count: recipe.likes_count ?? 0 })}
+        >
+          <svg aria-hidden="true" className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+          </svg>
+          {recipe.likes_count ?? 0}
+        </span>
       </div>
 
       {/* Content */}

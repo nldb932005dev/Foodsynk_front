@@ -28,6 +28,7 @@ export default function RecipeDetail() {
   const [newComment, setNewComment] = useState("");
   const [postingComment, setPostingComment] = useState(false);
   const [commentError, setCommentError] = useState("");
+  const [deleteError, setDeleteError] = useState("");
 
   // ── Carga inicial de la receta ──────────────────────────────────────────────
   useEffect(() => {
@@ -73,13 +74,13 @@ export default function RecipeDetail() {
     setLoadingLike(true);
     try {
       if (liked) {
-        await api.delete(`/recipes/${id}/like`);
+        const res = await api.delete(`/recipes/${id}/like`);
         setLiked(false);
-        setLikesCount((c) => Math.max(0, c - 1));
+        setLikesCount(res.data?.likes_count ?? Math.max(0, likesCount - 1));
       } else {
-        await api.post(`/recipes/${id}/like`);
+        const res = await api.post(`/recipes/${id}/like`);
         setLiked(true);
-        setLikesCount((c) => c + 1);
+        setLikesCount(res.data?.likes_count ?? likesCount + 1);
       }
     } catch {
       // silencioso — el contador vuelve al estado correcto en el próximo load
@@ -126,11 +127,15 @@ export default function RecipeDetail() {
   }
 
   async function handleDeleteComment(commentId) {
+    setDeleteError("");
     try {
       await api.delete(`/comments/${commentId}`);
       setComments((prev) => prev.filter((c) => c.id !== commentId));
-    } catch {
-      // Operacion no critica: el comentario seguira visible si falla el borrado.
+    } catch (err) {
+      const status = err?.response?.status;
+      if (status === 403) setDeleteError(t("errors.deleteCommentForbidden"));
+      else if (status === 404) setDeleteError(t("errors.deleteCommentNotFound"));
+      else setDeleteError(t("errors.deleteCommentGeneric"));
     }
   }
 
@@ -364,6 +369,12 @@ export default function RecipeDetail() {
               </li>
             ))}
           </ul>
+        )}
+
+        {deleteError && (
+          <p role="alert" className="mt-4 text-sm text-brand-error">
+            {deleteError}
+          </p>
         )}
 
         {/* CTA para no autenticados */}

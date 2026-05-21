@@ -89,8 +89,17 @@ export default function Register() {
       if (status === 422) {
         const errors = err?.response?.data?.errors;
         if (errors) {
-          const firstError = Object.values(errors)[0];
-          setError(Array.isArray(firstError) ? firstError[0] : String(firstError));
+          const pwdErrors = errors.password;
+          const firstPwdError = Array.isArray(pwdErrors) ? pwdErrors[0] : pwdErrors;
+          if (
+            typeof firstPwdError === "string" &&
+            firstPwdError.toLowerCase().includes("filtraci")
+          ) {
+            setError(t("errors.passwordPwnedFriendly"));
+          } else {
+            const firstError = Object.values(errors)[0];
+            setError(Array.isArray(firstError) ? firstError[0] : String(firstError));
+          }
         } else {
           setError(t("errors.registerData"));
         }

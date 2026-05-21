@@ -92,7 +92,7 @@ function FavoritesTab({ onSelect }) {
 
 function ExploreTab({ onSelect }) {
   const { t } = useTranslation();
-  const { filtered, loading, query, setQuery, tags, activeTag, setActiveTag } =
+  const { filtered, loading, query, setQuery, tags, activeTags, toggleTag, clearTags } =
     useRecipeSearch();
 
   return (
@@ -103,9 +103,10 @@ function ExploreTab({ onSelect }) {
       {!loading && tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           <button
-            onClick={() => setActiveTag(null)}
+            onClick={clearTags}
+            aria-pressed={activeTags.length === 0}
             className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-              !activeTag
+              activeTags.length === 0
                 ? "bg-brand-green text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
@@ -115,9 +116,10 @@ function ExploreTab({ onSelect }) {
           {tags.map((tag) => (
             <button
               key={tag}
-              onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+              onClick={() => toggleTag(tag)}
+              aria-pressed={activeTags.includes(tag)}
               className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
-                activeTag === tag
+                activeTags.includes(tag)
                   ? "bg-brand-green text-white"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}

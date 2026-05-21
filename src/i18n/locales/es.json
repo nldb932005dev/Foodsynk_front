@@ -140,6 +140,7 @@
     "loginGeneric": "Error al iniciar sesión. Inténtalo de nuevo más tarde.",
     "registerData": "Datos incorrectos. Revisa los campos e inténtalo de nuevo.",
     "registerGeneric": "Error al crear la cuenta. Inténtalo de nuevo más tarde.",
+    "passwordPwnedFriendly": "Esa contraseña aparece en bases de datos públicas de contraseñas robadas en filtraciones de otros sitios web, no en Foodsynk. Por seguridad, elige una que no hayas usado nunca en ningún otro sitio.",
     "formData": "Datos incorrectos. Revisa los campos e inténtalo de nuevo.",
     "loadOptions": "No se pudieron cargar las categorías e ingredientes.",
     "photoUrlInvalid": "La URL de la foto no es válida.",
@@ -163,6 +164,9 @@
     "loadShoppingList": "No se pudo cargar la lista de la compra.",
     "loadWeeklyPlan": "No se pudo cargar el plan semanal. El servidor puede necesitar actualizarse.",
     "postComment": "No se pudo publicar el comentario. Inténtalo de nuevo.",
+    "deleteCommentForbidden": "No tienes permiso para eliminar este comentario.",
+    "deleteCommentNotFound": "Este comentario ya no existe.",
+    "deleteCommentGeneric": "No se pudo eliminar el comentario. Inténtalo de nuevo.",
     "createItem": "No se pudo crear. Inténtalo de nuevo.",
     "saveProfile": "No se pudieron guardar los cambios.",
     "changePassword": "No se pudo cambiar la contraseña.",
@@ -195,12 +199,18 @@
       "viewN_other": "Ver {{count}} recetas",
       "ctaTitle": "Regístrate para guardar tus propias recetas",
       "ctaText": "Crea, organiza y gestiona tus recetas favoritas.",
-      "ctaButton": "Crear cuenta gratis"
+      "ctaButton": "Crear cuenta gratis",
+      "sortLabel": "Ordenar:",
+      "sortRecent": "Más recientes",
+      "sortPopular": "Más populares"
     },
     "home": {
       "title": "Todas las recetas",
       "subtitle": "Explora todas las recetas disponibles",
-      "empty": "No hay recetas todavía"
+      "empty": "No hay recetas todavía",
+      "sortLabel": "Ordenar por:",
+      "sortRecent": "Más recientes",
+      "sortPopular": "Más populares"
     },
     "mine": {
       "title": "Mis Recetas",
@@ -226,7 +236,8 @@
       "moreCount": "+{{count}} más",
       "draft": "Borrador",
       "published": "Publicada",
-      "publish": "Publicar receta"
+      "publish": "Publicar receta",
+      "likes": "{{count}} me gusta"
     },
     "form": {
       "backToMine": "Volver a Mis Recetas",
@@ -359,7 +370,8 @@
     "bought": "Comprado",
     "boughtCount": "{{done}} de {{total}} ingredientes comprados",
     "fileHeader": "Lista de la compra — {{name}}",
-    "filePeople": "Para {{count}} personas"
+    "filePeople": "Para {{count}} personas",
+    "allBought": "No hay ingredientes pendientes para copiar."
   },
   "account": {
     "title": "Mi cuenta",
@@ -734,5 +746,10 @@
       "noResults": "No hay accesos que coincidan con los filtros.",
       "csvReason": "Motivo"
     }
+  },
+  "footer": {
+    "license": "Licencia CC BY-NC-ND 4.0",
+    "safeCreative": "Safe Creative ID 2605175683942",
+    "contact": "Contacto"
   }
 }
