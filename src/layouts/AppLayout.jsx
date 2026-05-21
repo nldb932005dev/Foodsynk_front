@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import Navbar from "../components/Navbar";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import { api } from "../api/axios";
@@ -38,12 +39,17 @@ export default function AppLayout() {
         <Outlet />
       </main>
       <footer className="border-t border-brand-green-light/40 bg-white/60 py-4 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
           <p>
             © 2026{" "}
             <span className="font-semibold text-brand-navy">Nuria López</span>{" "}
             · Foodsynk
           </p>
+
+          {/* Selector de idioma — reubicado aquí desde el navbar (también está
+              en el menú lateral para usuarios registrados). */}
+          <LanguageSwitcher />
+
           <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
             <a
               href="https://creativecommons.org/licenses/by-nc-nd/4.0/deed.es"

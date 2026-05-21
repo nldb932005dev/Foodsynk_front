@@ -8,6 +8,8 @@ import { AuthProvider } from "./auth/AuthProvider";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import TwoFactorChallenge from "./pages/TwoFactorChallenge";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Explore from "./pages/Explore";
 import Home from "./pages/Home";
 import MyRecipes from "./pages/MyRecipes";
@@ -41,6 +43,8 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/2fa-challenge" element={<TwoFactorChallenge />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/password-reset/:token" element={<ResetPassword />} />
 
       {/* Paginas con shell visual (AppLayout) */}
       <Route element={<AppLayout />}>

@@ -183,6 +183,15 @@ export default function Login() {
                 {loading ? t("auth.login.submitting") : t("auth.login.submit")}
               </button>
 
+              <p className="text-center text-sm">
+                <Link
+                  to="/forgot-password"
+                  className="font-medium text-brand-green hover:text-brand-green-dark transition-colors underline underline-offset-2"
+                >
+                  {t("auth.login.forgotPassword")}
+                </Link>
+              </p>
+
               {error && (
                 <div role="alert" className="rounded-xl border border-brand-error/30 bg-brand-error/10 px-4 py-3 text-sm text-brand-error">
                   {error}

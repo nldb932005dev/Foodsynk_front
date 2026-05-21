@@ -110,13 +110,11 @@ export default function Navbar({ isAuthenticated = false, user = null, onLogout 
         {/* Zona derecha — condicional */}
         {isAuthenticated ? (
           <div className="flex items-center gap-1">
-            <LanguageSwitcher className="mr-1" />
             <NotificationBell />
             <UserBadge user={user} onLogout={onLogout} />
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <LanguageSwitcher className="mr-1" />
             <Link
               to="/login"
               className="rounded-xl px-3 py-2 text-sm font-medium text-brand-navy hover:bg-brand-cream transition-colors"
@@ -206,6 +204,13 @@ export default function Navbar({ isAuthenticated = false, user = null, onLogout 
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
               </svg>
               {t("nav.myMenus")}
+            </Link>
+
+            <Link to="/notificaciones" onClick={closeSidebar} className={navItemClass(isActive("/notificaciones"))}>
+              <svg aria-hidden="true" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+              </svg>
+              {t("nav.notifications")}
             </Link>
 
             <div className="pt-3 mt-3 border-t border-white/10">

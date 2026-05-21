@@ -60,6 +60,8 @@ export default function Explore() {
   });
 
   const filterPanelProps = {
+    sortBy,
+    setSortBy,
     tags,
     activeTags,
     onTagToggle: toggleTag,
@@ -82,11 +84,41 @@ export default function Explore() {
       <PageHeader
         title={t("recipes.explore.title")}
         subtitle={t("recipes.explore.subtitle")}
+        subtitleClassName="hidden sm:block"
       />
 
-      {/* Search bar — full width on all breakpoints */}
-      <div className="mt-4">
-        <SearchBar value={query} onChange={setQuery} />
+      {/* Buscador + botón Filtros (móvil) en una sola fila */}
+      <div className="mt-4 flex items-center gap-2">
+        <div className="flex-1 min-w-0">
+          <SearchBar value={query} onChange={setQuery} />
+        </div>
+        {/* Filtros — solo móvil/tablet; en escritorio el panel vive en la barra lateral */}
+        <button
+          onClick={() => setDrawerOpen(true)}
+          aria-label={
+            activeFiltersCount > 0
+              ? t("recipes.explore.filtersAria", { count: activeFiltersCount })
+              : t("recipes.explore.filtersAriaNone")
+          }
+          className="flex flex-shrink-0 items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-xs font-semibold text-gray-700 hover:border-brand-green hover:text-brand-green transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-green lg:hidden"
+        >
+          <svg
+            aria-hidden="true"
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M6 8h12M10 12h4" />
+          </svg>
+          {t("recipes.explore.filters")}
+          {activeFiltersCount > 0 && (
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-brand-green text-white text-[10px] font-bold">
+              {activeFiltersCount}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* Quick filters strip — desktop only (shown above the sidebar+grid layout) */}
@@ -127,70 +159,39 @@ export default function Explore() {
         </div>
       )}
 
-      {/* Mobile/tablet: quick pills + "Filtros" button */}
-      {!loading && (
+      {/* Filtros rápidos (móvil) — una sola fila deslizable en horizontal,
+          para que las píldoras no se partan en dos filas en pantallas estrechas */}
+      {!loading && quickTags.length > 0 && (
         <div
-          className="mt-3 flex flex-wrap items-center gap-2 lg:hidden"
+          className="mt-3 flex gap-2 overflow-x-auto pb-1 lg:hidden"
           role="group"
           aria-label={t("recipes.explore.quickFiltersShort")}
         >
-          {quickTags.length > 0 && (
-            <>
-              <button
-                onClick={clearTags}
-                aria-pressed={activeTags.length === 0}
-                className={`rounded-full px-3.5 py-1 text-xs font-semibold transition-colors ${
-                  activeTags.length === 0
-                    ? "bg-brand-green text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                {t("filters.all")}
-              </button>
-              {quickTags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => toggleTag(tag)}
-                  aria-pressed={activeTags.includes(tag)}
-                  className={`rounded-full px-3.5 py-1 text-xs font-semibold transition-colors ${
-                    activeTags.includes(tag)
-                      ? "bg-brand-green text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-            </>
-          )}
-
-          {/* "Más filtros" button */}
           <button
-            onClick={() => setDrawerOpen(true)}
-            aria-label={
-              activeFiltersCount > 0
-                ? t("recipes.explore.filtersAria", { count: activeFiltersCount })
-                : t("recipes.explore.filtersAriaNone")
-            }
-            className="ml-auto flex items-center gap-1.5 rounded-full border border-gray-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-gray-700 hover:border-brand-green hover:text-brand-green transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-green"
+            onClick={clearTags}
+            aria-pressed={activeTags.length === 0}
+            className={`flex-shrink-0 rounded-full px-3.5 py-1 text-xs font-semibold transition-colors ${
+              activeTags.length === 0
+                ? "bg-brand-green text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
           >
-            <svg
-              aria-hidden="true"
-              className="w-3.5 h-3.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M6 8h12M10 12h4" />
-            </svg>
-            {t("recipes.explore.filters")}
-            {activeFiltersCount > 0 && (
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-brand-green text-white text-[10px] font-bold">
-                {activeFiltersCount}
-              </span>
-            )}
+            {t("filters.all")}
           </button>
+          {quickTags.map((tag) => (
+            <button
+              key={tag}
+              onClick={() => toggleTag(tag)}
+              aria-pressed={activeTags.includes(tag)}
+              className={`flex-shrink-0 rounded-full px-3.5 py-1 text-xs font-semibold transition-colors ${
+                activeTags.includes(tag)
+                  ? "bg-brand-green text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {tag}
+            </button>
+          ))}
         </div>
       )}
 
@@ -242,40 +243,6 @@ export default function Explore() {
 
           {!loading && !error && filtered.length > 0 && (
             <>
-              {/* Selector de orden: recientes / populares */}
-              <div className="mb-4 flex items-center justify-end gap-2">
-                <span className="text-xs font-medium text-gray-400" aria-hidden="true">
-                  {t("recipes.explore.sortLabel")}
-                </span>
-                <div
-                  className="inline-flex rounded-full bg-gray-100 p-0.5"
-                  role="group"
-                  aria-label={t("recipes.explore.sortLabel")}
-                >
-                  <button
-                    onClick={() => setSortBy("recent")}
-                    aria-pressed={sortBy === "recent"}
-                    className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-green ${
-                      sortBy === "recent"
-                        ? "bg-white text-brand-green shadow-sm"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    {t("recipes.explore.sortRecent")}
-                  </button>
-                  <button
-                    onClick={() => setSortBy("popular")}
-                    aria-pressed={sortBy === "popular"}
-                    className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-green ${
-                      sortBy === "popular"
-                        ? "bg-white text-brand-green shadow-sm"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    {t("recipes.explore.sortPopular")}
-                  </button>
-                </div>
-              </div>
               <RecipeGrid recipes={paginated} />
               {filtered.length > pageSize && controls}
             </>
@@ -317,7 +284,7 @@ export default function Explore() {
           />
 
           {/* Drawer panel */}
-          <div className="absolute inset-y-0 left-0 flex w-80 max-w-full flex-col bg-white shadow-2xl animate-fade-in">
+          <div className="absolute inset-y-0 left-0 flex w-80 max-w-[85vw] flex-col bg-white shadow-2xl animate-fade-in">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
               <h2 className="text-sm font-semibold text-brand-navy">{t("filters.title")}</h2>

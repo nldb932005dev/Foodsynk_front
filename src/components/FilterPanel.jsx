@@ -91,6 +91,8 @@ function TimeRangeSlider({ min, max, minVal, maxVal, onMinChange, onMaxChange })
 }
 
 export default function FilterPanel({
+  sortBy,
+  setSortBy,
   tags,
   activeTags,
   onTagToggle,
@@ -129,6 +131,37 @@ export default function FilterPanel({
           {t("filters.clear", { count: activeFiltersCount })}
         </button>
       )}
+
+      {/* Sort */}
+      <section aria-labelledby="filter-sort-heading">
+        <h3
+          id="filter-sort-heading"
+          className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3"
+        >
+          {t("filters.sortHeading")}
+        </h3>
+        <div className="flex flex-wrap gap-1.5" role="group" aria-labelledby="filter-sort-heading">
+          {[
+            { value: "recent", label: t("recipes.explore.sortRecent") },
+            { value: "popular", label: t("recipes.explore.sortPopular") },
+          ].map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => setSortBy(value)}
+              aria-pressed={sortBy === value}
+              className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-green ${
+                sortBy === value
+                  ? "bg-brand-green text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <hr className="border-gray-100" aria-hidden="true" />
 
       {/* Categories */}
       <section aria-labelledby="filter-cat-heading">

@@ -63,8 +63,10 @@ export default function Home() {
 
       {!loading && !error && recipes.length > 0 && (
         <>
-          {/* Selector de orden: recientes / populares */}
-          <div className="mb-4 flex items-center justify-end gap-2">
+          {/* Selector de orden: recientes / populares.
+              Móvil: etiqueta a la izquierda y píldora a la derecha (justify-between);
+              flex-wrap evita desbordes en pantallas muy estrechas. */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2 sm:justify-end">
             <span className="text-xs font-medium text-gray-400" aria-hidden="true">
               {t("recipes.home.sortLabel")}
             </span>
