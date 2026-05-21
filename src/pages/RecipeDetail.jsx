@@ -101,6 +101,7 @@ export default function RecipeDetail() {
         setFavorited(true);
       }
     } catch {
+      // Operacion no critica: se mantiene el estado local actual.
     } finally {
       setLoadingFav(false);
     }
@@ -129,6 +130,7 @@ export default function RecipeDetail() {
       await api.delete(`/comments/${commentId}`);
       setComments((prev) => prev.filter((c) => c.id !== commentId));
     } catch {
+      // Operacion no critica: el comentario seguira visible si falla el borrado.
     }
   }
 

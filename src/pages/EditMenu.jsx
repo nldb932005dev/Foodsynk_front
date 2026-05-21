@@ -41,7 +41,7 @@ export default function EditMenu() {
           // Menú con cuestionario: prerellenar comidas con los valores existentes
           const initial = { desayuno: 0, almuerzo: 0, comida: 0, merienda: 0, cena: 0 };
           Object.entries(m.comidas).forEach(([k, v]) => {
-            if (initial.hasOwnProperty(k)) initial[k] = v;
+            if (Object.prototype.hasOwnProperty.call(initial, k)) initial[k] = v;
           });
           setComidas(initial);
         }

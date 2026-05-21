@@ -1,52 +1,48 @@
 import { useMemo, useState, useEffect } from "react";
 import { AuthContext } from "./AuthContext";
 
+function getStoredUser() {
+  const savedUser = sessionStorage.getItem("user");
+
+  if (!savedUser) return null;
+
+  try {
+    return JSON.parse(savedUser);
+  } catch {
+    sessionStorage.removeItem("user");
+    return null;
+  }
+}
 
 export function AuthProvider({ children }) {
- const [token, setToken] = useState(null);
- const [user, setUser] = useState(null);
- const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(() => sessionStorage.getItem("token"));
+  const [user, setUser] = useState(getStoredUser);
+  const [loading] = useState(false);
 
- // Rehidratar token y user desde sessionStorage al montar
- useEffect(() => {
-   const savedToken = sessionStorage.getItem("token");
-   if (savedToken) setToken(savedToken);
+  // Sincronizar token con sessionStorage
+  useEffect(() => {
+    if (token) {
+      sessionStorage.setItem("token", token);
+    } else {
+      sessionStorage.removeItem("token");
+    }
+  }, [token]);
 
-   const savedUser = sessionStorage.getItem("user");
-   if (savedUser) {
-     try {
-       setUser(JSON.parse(savedUser));
-     } catch {
-       sessionStorage.removeItem("user");
-     }
-   }
-   setLoading(false);
- }, []);
-
- // Sincronizar token con sessionStorage
- useEffect(() => {
-   if (token) {
-     sessionStorage.setItem("token", token);
-   } else {
-     sessionStorage.removeItem("token");
-   }
- }, [token]);
-
- // Sincronizar user con sessionStorage
- useEffect(() => {
-   if (user) {
-     sessionStorage.setItem("user", JSON.stringify(user));
-   } else {
-     sessionStorage.removeItem("user");
-   }
- }, [user]);
+  // Sincronizar user con sessionStorage
+  useEffect(() => {
+    if (user) {
+      sessionStorage.setItem("user", JSON.stringify(user));
+    } else {
+      sessionStorage.removeItem("user");
+    }
+  }, [user]);
 
 
- const value = useMemo(
-   () => ({ token, setToken, user, setUser, loading }),
-   [token, user, loading]
- );
+  const value = useMemo(
+    () => ({ token, setToken, user, setUser, loading }),
+    [token, user, loading]
+  );
 
 
- return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

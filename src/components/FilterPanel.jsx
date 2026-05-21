@@ -1,22 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-
-export const ALLERGENS = [
-  { id: "gluten" },
-  { id: "lacteos" },
-  { id: "huevo" },
-  { id: "pescado" },
-  { id: "marisco" },
-  { id: "frutos_secos" },
-  { id: "cacahuetes" },
-  { id: "soja" },
-  { id: "sesamo" },
-  { id: "mostaza" },
-  { id: "apio" },
-  { id: "altramuces" },
-  { id: "moluscos" },
-  { id: "sulfitos" },
-];
+import { ALLERGENS } from "../utils/allergens";
 
 function TimeRangeSlider({ min, max, minVal, maxVal, onMinChange, onMaxChange }) {
   const { t } = useTranslation();

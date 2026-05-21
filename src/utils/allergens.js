@@ -1,0 +1,16 @@
+export const ALLERGENS = [
+  { id: "gluten" },
+  { id: "lacteos" },
+  { id: "huevo" },
+  { id: "pescado" },
+  { id: "marisco" },
+  { id: "frutos_secos" },
+  { id: "cacahuetes" },
+  { id: "soja" },
+  { id: "sesamo" },
+  { id: "mostaza" },
+  { id: "apio" },
+  { id: "altramuces" },
+  { id: "moluscos" },
+  { id: "sulfitos" },
+];
