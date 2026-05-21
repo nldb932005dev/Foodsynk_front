@@ -1,6 +1,22 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ALLERGENS } from "../utils/allergens";
+
+const ALLERGENS = [
+  { id: "gluten" },
+  { id: "lacteos" },
+  { id: "huevo" },
+  { id: "pescado" },
+  { id: "marisco" },
+  { id: "frutos_secos" },
+  { id: "cacahuetes" },
+  { id: "soja" },
+  { id: "sesamo" },
+  { id: "mostaza" },
+  { id: "apio" },
+  { id: "altramuces" },
+  { id: "moluscos" },
+  { id: "sulfitos" },
+];
 
 function TimeRangeSlider({ min, max, minVal, maxVal, onMinChange, onMaxChange }) {
   const { t } = useTranslation();
@@ -34,7 +50,7 @@ function TimeRangeSlider({ min, max, minVal, maxVal, onMinChange, onMaxChange })
           style={{ left: `${maxPercent}%` }}
           aria-hidden="true"
         />
-        {/* Min range input — invisible, interactive */}
+        {/* Min range input â€” invisible, interactive */}
         <input
           type="range"
           min={min}
@@ -45,7 +61,7 @@ function TimeRangeSlider({ min, max, minVal, maxVal, onMinChange, onMaxChange })
           style={{ zIndex: minVal > max - 15 ? 5 : 3 }}
           aria-label={t("filters.minMinutes", { value: minVal })}
         />
-        {/* Max range input — invisible, interactive */}
+        {/* Max range input â€” invisible, interactive */}
         <input
           type="range"
           min={min}
@@ -63,7 +79,7 @@ function TimeRangeSlider({ min, max, minVal, maxVal, onMinChange, onMaxChange })
         <div className="flex-1 text-center rounded-lg border border-gray-200 bg-white py-1.5">
           <span className="text-xs font-semibold text-brand-navy">{t("filters.minLabel", { value: minVal })}</span>
         </div>
-        <span className="text-xs text-gray-400" aria-hidden="true">—</span>
+        <span className="text-xs text-gray-400" aria-hidden="true">â€”</span>
         <div className="flex-1 text-center rounded-lg border border-gray-200 bg-white py-1.5">
           <span className="text-xs font-semibold text-brand-navy">
             {maxVal >= max ? t("filters.maxLabelPlus", { value: max }) : t("filters.minLabel", { value: maxVal })}
@@ -75,9 +91,12 @@ function TimeRangeSlider({ min, max, minVal, maxVal, onMinChange, onMaxChange })
 }
 
 export default function FilterPanel({
+  sortBy,
+  setSortBy,
   tags,
-  activeTag,
-  onTagClick,
+  activeTags,
+  onTagToggle,
+  onTagsClear,
   timeMin,
   timeMax,
   setTimeMin,
@@ -113,6 +132,37 @@ export default function FilterPanel({
         </button>
       )}
 
+      {/* Sort */}
+      <section aria-labelledby="filter-sort-heading">
+        <h3
+          id="filter-sort-heading"
+          className="text-xs font-semibold uppercase tracking-widest text-gray-400 mb-3"
+        >
+          {t("filters.sortHeading")}
+        </h3>
+        <div className="flex flex-wrap gap-1.5" role="group" aria-labelledby="filter-sort-heading">
+          {[
+            { value: "recent", label: t("recipes.explore.sortRecent") },
+            { value: "popular", label: t("recipes.explore.sortPopular") },
+          ].map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => setSortBy(value)}
+              aria-pressed={sortBy === value}
+              className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-green ${
+                sortBy === value
+                  ? "bg-brand-green text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <hr className="border-gray-100" aria-hidden="true" />
+
       {/* Categories */}
       <section aria-labelledby="filter-cat-heading">
         <h3
@@ -123,10 +173,10 @@ export default function FilterPanel({
         </h3>
         <div className="flex flex-wrap gap-1.5" role="group" aria-labelledby="filter-cat-heading">
           <button
-            onClick={() => onTagClick(null)}
-            aria-pressed={activeTag === null}
+            onClick={onTagsClear}
+            aria-pressed={activeTags.length === 0}
             className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-green ${
-              activeTag === null
+              activeTags.length === 0
                 ? "bg-brand-green text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
@@ -136,10 +186,10 @@ export default function FilterPanel({
           {tags.map((tag) => (
             <button
               key={tag}
-              onClick={() => onTagClick(activeTag === tag ? null : tag)}
-              aria-pressed={activeTag === tag}
+              onClick={() => onTagToggle(tag)}
+              aria-pressed={activeTags.includes(tag)}
               className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-green ${
-                activeTag === tag
+                activeTags.includes(tag)
                   ? "bg-brand-green text-white"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
@@ -227,3 +277,4 @@ export default function FilterPanel({
     </div>
   );
 }
+

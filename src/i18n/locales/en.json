@@ -30,6 +30,7 @@
     "newRecipe": "New Recipe",
     "myFavorites": "My Favorites",
     "myMenus": "My Menus",
+    "notifications": "Notifications",
     "login": "Log in",
     "register": "Sign up",
     "logout": "Log out",
@@ -53,6 +54,7 @@
       "submitting": "Logging in...",
       "noAccount": "Don't have an account?",
       "registerLink": "Sign up",
+      "forgotPassword": "Forgot your password?",
       "infoEyebrow": "Plan better",
       "infoTitle": "Healthy menus without the hassle",
       "infoText": "Save your favorite recipes, build shopping lists and organize your week in minutes."
@@ -79,6 +81,33 @@
         "rule4": "A symbol (!@#$%)",
         "rule5": "The less common, the better"
       }
+    },
+    "forgotPassword": {
+      "title": "Forgot your password?",
+      "subtitle": "Enter your email and we'll send you a link to create a new password.",
+      "sentSubtitle": "Request received.",
+      "email": "Email",
+      "submit": "Send recovery link",
+      "submitting": "Sending...",
+      "sent": "If the email exists, we've sent you a recovery link. Check your inbox and your spam folder. The link expires in 30 minutes.",
+      "backToLogin": "Back to login",
+      "errorGeneric": "Could not send the link. Please try again later."
+    },
+    "resetPassword": {
+      "title": "Create a new password",
+      "subtitle": "Choose a new password for your account",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "submit": "Change password",
+      "submitting": "Changing...",
+      "successTitle": "Password updated!",
+      "success": "Your password has been changed successfully. Taking you to login...",
+      "goToLogin": "Go to login now",
+      "invalidTitle": "Invalid link",
+      "invalidLink": "The link has expired or is not valid. Recovery links expire after 30 minutes.",
+      "requestNewLink": "Request a new link",
+      "backToLogin": "Back to login",
+      "errorGeneric": "Could not change the password. Please try again later."
     },
     "features": {
       "recipes": "Recipes",
@@ -440,6 +469,7 @@
   "filters": {
     "title": "Filters",
     "clear": "Clear filters ({{count}})",
+    "sortHeading": "Sort by",
     "category": "Category",
     "all": "All",
     "prepTime": "Preparation time",

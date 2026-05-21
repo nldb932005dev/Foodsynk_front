@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import useRecipes from "../hooks/useRecipes";
 import PageHeader from "../components/PageHeader";
@@ -5,10 +6,39 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import ErrorMessage from "../components/ErrorMessage";
 import EmptyState from "../components/EmptyState";
 import RecipeGrid from "../components/RecipeGrid";
+import Pagination from "../components/Pagination";
 
 export default function Home() {
   const { recipes, loading, error } = useRecipes();
   const { t } = useTranslation();
+  const [sortBy, setSortBy] = useState("recent"); // "recent" | "popular"
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Orden client-side (copia, para no mutar el array del hook): "recent" usa
+  // id DESC como proxy de fecha —igual que useRecipeSearch—; "popular" reordena
+  // por likes_count.
+  const sortedRecipes = useMemo(() => {
+    const copy = [...recipes];
+    if (sortBy === "popular") {
+      return copy.sort((a, b) => (b.likes_count ?? 0) - (a.likes_count ?? 0));
+    }
+    return copy.sort((a, b) => (b.id ?? 0) - (a.id ?? 0));
+  }, [recipes, sortBy]);
+
+  // Volver a la página 1 al cambiar el orden: si no, el usuario puede quedarse
+  // en una página fuera de rango o sin ver el nuevo primer resultado.
+  useEffect(() => {
+    setPage(1);
+  }, [sortBy]);
+
+  const { paginated, controls } = Pagination({
+    items: sortedRecipes,
+    pageSize,
+    setPageSize,
+    page,
+    setPage,
+  });
 
   return (
     <div>
@@ -32,7 +62,46 @@ export default function Home() {
       )}
 
       {!loading && !error && recipes.length > 0 && (
-        <RecipeGrid recipes={recipes} />
+        <>
+          {/* Selector de orden: recientes / populares.
+              Móvil: etiqueta a la izquierda y píldora a la derecha (justify-between);
+              flex-wrap evita desbordes en pantallas muy estrechas. */}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2 sm:justify-end">
+            <span className="text-xs font-medium text-gray-400" aria-hidden="true">
+              {t("recipes.home.sortLabel")}
+            </span>
+            <div
+              className="inline-flex rounded-full bg-gray-100 p-0.5"
+              role="group"
+              aria-label={t("recipes.home.sortLabel")}
+            >
+              <button
+                onClick={() => setSortBy("recent")}
+                aria-pressed={sortBy === "recent"}
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-green ${
+                  sortBy === "recent"
+                    ? "bg-white text-brand-green shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {t("recipes.home.sortRecent")}
+              </button>
+              <button
+                onClick={() => setSortBy("popular")}
+                aria-pressed={sortBy === "popular"}
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-green ${
+                  sortBy === "popular"
+                    ? "bg-white text-brand-green shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {t("recipes.home.sortPopular")}
+              </button>
+            </div>
+          </div>
+          <RecipeGrid recipes={paginated} />
+          {sortedRecipes.length > pageSize && controls}
+        </>
       )}
     </div>
   );

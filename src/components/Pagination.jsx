@@ -52,7 +52,7 @@ export default function Pagination({ items, pageSize, setPageSize, page, setPage
   return {
     paginated,
     controls: (
-      <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
+      <div className="flex flex-wrap items-center justify-center gap-3 mt-4 sm:justify-between">
         <label className="text-sm text-gray-500 flex items-center gap-2">
           {t("common.show")}
           <select

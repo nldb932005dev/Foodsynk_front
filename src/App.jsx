@@ -2,6 +2,8 @@ import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import TwoFactorChallenge from "./pages/TwoFactorChallenge";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Explore from "./pages/Explore";
 import MyRecipes from "./pages/MyRecipes";
 import RecipeDetail from "./pages/RecipeDetail";
@@ -33,6 +35,8 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/2fa-challenge" element={<TwoFactorChallenge />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/password-reset/:token" element={<ResetPassword />} />
 
       <Route element={<AppLayout />}>
         <Route path="/" element={<Explore />} />

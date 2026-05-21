@@ -30,6 +30,7 @@
     "newRecipe": "Nueva Receta",
     "myFavorites": "Mis Favoritos",
     "myMenus": "Mis Menús",
+    "notifications": "Notificaciones",
     "login": "Iniciar sesión",
     "register": "Registrarse",
     "logout": "Cerrar sesión",
@@ -53,6 +54,7 @@
       "submitting": "Entrando...",
       "noAccount": "¿No tienes cuenta?",
       "registerLink": "Regístrate",
+      "forgotPassword": "¿Has olvidado tu contraseña?",
       "infoEyebrow": "Planifica mejor",
       "infoTitle": "Menús saludables sin complicaciones",
       "infoText": "Guarda tus recetas favoritas, crea listas de compra y organiza tu semana en minutos."
@@ -79,6 +81,33 @@
         "rule4": "Algún símbolo (!@#$%)",
         "rule5": "Cuanto menos común, mejor"
       }
+    },
+    "forgotPassword": {
+      "title": "¿Has olvidado tu contraseña?",
+      "subtitle": "Introduce tu email y te enviaremos un enlace para crear una contraseña nueva.",
+      "sentSubtitle": "Solicitud recibida.",
+      "email": "Email",
+      "submit": "Enviar enlace de recuperación",
+      "submitting": "Enviando...",
+      "sent": "Si el email existe, te hemos enviado un enlace de recuperación. Revisa tu bandeja de entrada y la carpeta de spam. El enlace caduca en 30 minutos.",
+      "backToLogin": "Volver al inicio de sesión",
+      "errorGeneric": "No se pudo enviar el enlace. Inténtalo de nuevo más tarde."
+    },
+    "resetPassword": {
+      "title": "Crea una contraseña nueva",
+      "subtitle": "Elige una contraseña nueva para tu cuenta",
+      "newPassword": "Nueva contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "submit": "Cambiar contraseña",
+      "submitting": "Cambiando...",
+      "successTitle": "¡Contraseña actualizada!",
+      "success": "Tu contraseña se ha cambiado correctamente. Te llevamos al inicio de sesión...",
+      "goToLogin": "Ir al inicio de sesión ahora",
+      "invalidTitle": "Enlace no válido",
+      "invalidLink": "El enlace ha caducado o no es válido. Los enlaces de recuperación caducan a los 30 minutos.",
+      "requestNewLink": "Solicitar un enlace nuevo",
+      "backToLogin": "Volver al inicio de sesión",
+      "errorGeneric": "No se pudo cambiar la contraseña. Inténtalo de nuevo más tarde."
     },
     "features": {
       "recipes": "Recetas",
@@ -440,6 +469,7 @@
   "filters": {
     "title": "Filtros",
     "clear": "Limpiar filtros ({{count}})",
+    "sortHeading": "Ordenar por",
     "category": "Categoría",
     "all": "Todas",
     "prepTime": "Tiempo de preparación",
